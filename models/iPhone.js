@@ -3,48 +3,47 @@ const mongoose = require('mongoose');
 // Define sub-schemas for each category
 
 const BatteryHealthSchema = new mongoose.Schema({
-  health: { type: String, required: true, enum: ['95% or Above', '90% or Above', '85% or Above', '80% or Above', 'Less than 80%'] },
+  health: { type: String, required: true },
   deductionPercentage: { type: Number, default: 0 },
-  image: { type: String, default: '' }, // Image can be updated later
 });
 
 const CosmeticIssuesSchema = new mongoose.Schema({
-  header: { type: String, required: true, enum: ['Damaged Display', 'Damaged Back', 'Damaged Camera Lens', 'Damaged Frame'] },
-  condition: { type: String, required: true, enum: ['Display glass is cracked or shattered', 'Back glass is cracked or shattered', 'Camera lens is cracked or shattered', 'Body is broken, bent or heavily dented'] },
+  header: { type: String, required: true },
+  condition: { type: String, required: true },
   deductionPercentage: { type: Number, default: 0 },
   image: { type: String, default: '' }, // Image can be updated later
 });
 
 const FaultsSchema = new mongoose.Schema({
-  header: { type: String, required: true, enum: ['Faulty Display', 'Faulty Earpiece', 'Faulty Loudspeaker', 'Faulty Face ID', 'Faulty Proximity Sensor', 'Faulty Vibration Motor', 'Faulty Power Button', 'Faulty Volume Button', 'Faulty Mute Button', 'Faulty Front Camera', 'Faulty Rear Camera', 'Faulty Flash', 'Faulty Microphone', 'Faulty Charging Port'] },
-  condition: { type: String, required: true, enum: ['Spots/Dead pixels or visible lines on the display', 'Earpiece is not working or the audio is noisy', 'Loudspeaker is not working or the audio is noisy', 'Face ID is not working or not working consistently', 'Proximity sensor is not working - The display does not turn off during the phone call', 'Vibration motor is not working or there is a rattling noise', 'Power button is not working or not working consistently', 'Volume button is not working or not working consistently', 'Mute button is not working or not working consistently', 'Front camera is not working or the image is blurry', 'Rear camera is not working or the image is blurry', 'Flash is not working', 'Microphone is not working or the audio is noisy', 'Charging port is faulty or the phone is not charging'] },
+  header: { type: String, required: true },
+  condition: { type: String, required: true },
   deductionPercentage: { type: Number, default: 0 },
   image: { type: String, default: '' }, // Image can be updated later
 });
 
 const RepairSchema = new mongoose.Schema({
-  repair: { type: String, required: true, enum: ['Touch screen was replaced', 'Display was replaced', 'Front Camera was replaced', 'Back Camera was replaced', 'Speaker/Earpiece was replaced', 'Battery was replaced', 'Battery was replaced by REGEN', 'Motherboard/Logic board was repaired', 'Something else was repaired'] },
+  repair: { type: String, required: true },
   deductionPercentage: { type: Number, default: 0 },
   image: { type: String, default: '' }, // Image can be updated later
 });
 
 const FrontScreenSchema = new mongoose.Schema({
-  header: { type: String, required: true, enum: ['Excellent', 'Good', 'Fair', 'Acceptable'] },
-  condition: { type: String, required: true, enum: ['Very light signs of usage or 1 - 2 minor scratches', 'Some signs of usage or a few minor scratches', 'Moderate signs of usage or visible scratches', 'Heavy signs of usage or deep scratches'] },
+  header: { type: String, required: true},
+  condition: { type: String, required: true },
   deductionPercentage: { type: Number, default: 0 },
   image: { type: String, default: '' }, // Image can be updated later
 });
 
 const BackSchema = new mongoose.Schema({
-  header: { type: String, required: true, enum: ['Excellent', 'Good', 'Fair', 'Acceptable'] },
-  condition: { type: String, required: true, enum: ['Very light signs of usage or 1 - 2 minor scratches', 'Some signs of usage or a few minor scratches', 'Moderate signs of usage or visible scratches', 'Heavy signs of usage or deep scratches'] },
+  header: { type: String, required: true},
+  condition: { type: String, required: true },
   deductionPercentage: { type: Number, default: 0 },
   image: { type: String, default: '' }, // Image can be updated later
 });
 
 const SideSchema = new mongoose.Schema({
-  header: { type: String, required: true, enum: ['Excellent', 'Good', 'Fair', 'Acceptable'] },
-  condition: { type: String, required: true, enum: ['Very light signs of usage or 1 - 2 minor scratches', 'Some signs of usage or a few minor scratches', 'Moderate signs of usage or visible scratches', 'Heavy signs of usage or deep scratches'] },
+  header: { type: String, required: true },
+  condition: { type: String, required: true },
   deductionPercentage: { type: Number, default: 0 },
   image: { type: String, default: '' }, // Image can be updated later
 });
