@@ -37,9 +37,17 @@ router.post('/', async (req, res) => {
       isFunctional,
       isRepaired,
       isDamaged,
-      faults,
-      repair,
-      cosmeticIssues,
+      faults: faults.map(fault => ({
+        header: fault.header,
+        value: fault.description,
+      })),
+      repair: repair.map(repairItem => ({
+        repair: repairItem.repair, // Repair value only
+      })),
+      cosmeticIssues: cosmeticIssues.map(issue => ({
+        header: issue.header,
+        value: issue.description,
+      })),
       frontScreen,
       back,
       side,

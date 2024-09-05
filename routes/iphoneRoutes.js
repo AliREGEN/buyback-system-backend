@@ -239,4 +239,22 @@ router.get('/:modelName', async (req, res) => {
   }
 });
 
+// Route to delete an iPhone by ID
+router.delete('/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const deletedIPhone = await iPhone.findByIdAndDelete(id);
+
+    if (!deletedIPhone) {
+      return res.status(404).json({ message: 'iPhone not found' });
+    }
+
+    res.json({ message: 'iPhone deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting iPhone:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
+
 module.exports = router;

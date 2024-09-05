@@ -6,20 +6,17 @@ const PtaOptionSchema = new mongoose.Schema({
 });
 
 const RepairOptionSchema = new mongoose.Schema({
-  value: { type: String, required: true },
-  deductionPercentage: { type: Number, required: true },
+  repair: { type: String, required: true }, // Only repair and deductionPercentage are needed
 });
 
 const CosmeticIssueSchema = new mongoose.Schema({
-  header: { type: String, required: true },
+  header: { type: String, required: true }, // Header to differentiate cosmetic issues
   value: { type: String, required: true },
-  deductionPercentage: { type: Number, required: true },
 });
 
 const FaultOptionSchema = new mongoose.Schema({
-  header: { type: String, required: true },
+  header: { type: String, required: true }, // Header to differentiate fault options
   value: { type: String, required: true },
-  deductionPercentage: { type: Number, required: true },
 });
 
 const InspectionSchema = new mongoose.Schema({
