@@ -57,14 +57,27 @@ router.post('/', upload.array('images', 10), async (req, res) => {
       }));
     }
 
-    // Default values for deduction categories
-    const defaultBatteryHealth = [
-      { health: '95% or Above', deductionPercentage: 0 },
-      { health: '90% or Above', deductionPercentage: 0 },
-      { health: '85% or Above', deductionPercentage: 0 },
-      { health: '80% or Above', deductionPercentage: 0 },
-      { health: 'Less than 80%', deductionPercentage: 0 },
-    ];
+    // Filter battery health based on modelName
+    const filterBatteryHealthOptions = (modelName) => {
+      const allOptions = [
+        { health: '95% or Above', deductionPercentage: 0 },
+        { health: '90% or Above', deductionPercentage: 0 },
+        { health: '85% or Above', deductionPercentage: 0 },
+        { health: '80% or Above', deductionPercentage: 0 },
+        { health: 'Less than 80%', deductionPercentage: 0 },
+      ];
+
+      if (['iPhone 15 Pro Max', 'iPhone 15 Pro', 'iPhone 15 Plus', 'iPhone 15'].includes(modelName)) {
+        return allOptions.filter((option) => ['95% or Above', '90% or Above', '85% or Above'].includes(option.health));
+      } else if (['iPhone 14 Pro Max', 'iPhone 14 Pro', 'iPhone 14 Plus', 'iPhone 14'].includes(modelName)) {
+        return allOptions.filter((option) => ['90% or Above', '85% or Above', '80% or Above'].includes(option.health));
+      } else {
+        return allOptions.filter((option) => ['85% or Above', '80% or Above', 'Less than 80%'].includes(option.health));
+      }
+    };
+
+    // Apply the filtered battery health options based on the model name
+    const batteryHealthOptions = filterBatteryHealthOptions(modelName);
 
     const defaultCosmeticIssues = [
       { header: 'Damaged Display', condition: 'Cracked/Shattered', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/w5gsvgwfpkzpsx6k4an9' },
@@ -151,7 +164,7 @@ router.post('/', upload.array('images', 10), async (req, res) => {
         size: size,
         deductionPercentage: 0,
       })),
-      batteryHealth: defaultBatteryHealth,
+      batteryHealth: batteryHealthOptions,
       cosmeticIssues: defaultCosmeticIssues,
       faults: defaultFaults,
       repairs: defaultRepairs,
@@ -164,7 +177,7 @@ router.post('/', upload.array('images', 10), async (req, res) => {
     });
 
     await newiPhone.save();
-    console.log('New iPhone with images and default deductions saved to MongoDB:', newiPhone);
+    console.log('New iPhone with images and with filtered battery health saved to MongoDB:', newiPhone);
     return res.status(201).json(newiPhone);
   } catch (error) {
     console.error('Error adding iPhone:', error);

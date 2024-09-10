@@ -6,17 +6,25 @@ const PtaOptionSchema = new mongoose.Schema({
 });
 
 const RepairOptionSchema = new mongoose.Schema({
-  repair: { type: String, required: true }, // Only repair and deductionPercentage are needed
+  repair: { type: String, required: true }, 
 });
 
 const CosmeticIssueSchema = new mongoose.Schema({
-  header: { type: String, required: true }, // Header to differentiate cosmetic issues
+  header: { type: String, required: true },
   value: { type: String, required: true },
 });
 
 const FaultOptionSchema = new mongoose.Schema({
-  header: { type: String, required: true }, // Header to differentiate fault options
+  header: { type: String, required: true }, 
   value: { type: String, required: true },
+});
+
+const LocationSchema = new mongoose.Schema({
+  city: { type: String },
+  region: { type: String },
+  country: { type: String },
+  latitude: { type: Number },
+  longitude: { type: Number },
 });
 
 const InspectionSchema = new mongoose.Schema({
@@ -28,16 +36,25 @@ const InspectionSchema = new mongoose.Schema({
   simOption: { type: String },
   batteryHealth: { type: String },
   isFunctional: { type: String },
-  faults: { type: [FaultOptionSchema] }, // Array of fault options
+  faults: { type: [FaultOptionSchema] }, 
   isRepaired: { type: String },
-  repair: { type: [RepairOptionSchema] }, // Array of repair options
+  repair: { type: [RepairOptionSchema] }, 
   isDamaged: { type: String },
-  cosmeticIssues: { type: [CosmeticIssueSchema] }, // Array of cosmetic issues
+  cosmeticIssues: { type: [CosmeticIssueSchema] }, 
   frontScreen: { type: String },
   back: { type: String },
   side: { type: String },
-  pta: { type: Map, of: PtaOptionSchema }, // Map for PTA options
+  pta: { type: Map, of: PtaOptionSchema }, 
   accessories: { type: String },
+  // Customer details
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  whatsapp: { type: String, required: true },
+  isInLahore: { type: Boolean, required: true },
+  buyingPreference: { type: String, required: true },
+  // IP and Location details
+  ipAddress: { type: String },
+  location: { type: LocationSchema },
   createdAt: { type: Date, default: Date.now },
 });
 

@@ -1,4 +1,5 @@
 const express = require('express');
+const axios = require('axios');
 const router = express.Router();
 const Inspection = require('../models/Inspection');
 
@@ -24,6 +25,15 @@ router.post('/', async (req, res) => {
       side,
       pta,
       accessories,
+      // Customer details
+      firstName,
+      lastName,
+      whatsapp,
+      isInLahore,
+      buyingPreference,
+      // IP and Location
+      ipAddress,
+      location,
     } = req.body;
 
     const newInspection = new Inspection({
@@ -42,7 +52,7 @@ router.post('/', async (req, res) => {
         value: fault.description,
       })),
       repair: repair.map(repairItem => ({
-        repair: repairItem.repair, // Repair value only
+        repair: repairItem.repair,
       })),
       cosmeticIssues: cosmeticIssues.map(issue => ({
         header: issue.header,
@@ -53,6 +63,14 @@ router.post('/', async (req, res) => {
       side,
       pta,
       accessories,
+      // Store customer details
+      firstName,
+      lastName,
+      whatsapp,
+      isInLahore,
+      buyingPreference,
+      ipAddress,
+      location,
     });
 
     await newInspection.save();
@@ -60,6 +78,23 @@ router.post('/', async (req, res) => {
   } catch (error) {
     console.error('Error saving inspection:', error);
     res.status(500).json({ message: 'Server Error' });
+  }
+});
+
+// Route to get IP and location data via backend
+router.get('/get-ip-location', async (req, res) => {
+  try {
+    const ipResponse = await axios.get('https://api.ipify.org?format=json');
+    const ip = ipResponse.data.ip;
+
+    const locationResponse = await axios.get(`https://ipinfo.io/${ip}/geo`);
+    const { city, region, country, loc } = locationResponse.data;
+    const [latitude, longitude] = loc.split(',');
+
+    res.status(200).json({ ip, city, region, country, latitude, longitude });
+  } catch (error) {
+    console.error('Error fetching IP/location:', error);
+    res.status(500).json({ message: 'Failed to fetch IP and location.' });
   }
 });
 
