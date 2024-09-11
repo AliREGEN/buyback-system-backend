@@ -32,9 +32,10 @@ router.post('/', async (req, res) => {
       isInLahore,
       buyingPreference,
       // IP and Location
-      ipAddress,
       location,
     } = req.body;
+
+    const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
     const newInspection = new Inspection({
       modelName,
@@ -82,12 +83,13 @@ router.post('/', async (req, res) => {
 });
 
 // Route to get IP and location data via backend
+require('dotenv').config();
+
 router.get('/get-ip-location', async (req, res) => {
   try {
-    const ipResponse = await axios.get('https://api.ipify.org?format=json');
-    const ip = ipResponse.data.ip;
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-    const locationResponse = await axios.get(`https://ipinfo.io/${ip}/geo`);
+    const locationResponse = await axios.get(`https://ipinfo.io/${ip}/geo?token=${process.env.IPINFO_TOKEN}`);
     const { city, region, country, loc } = locationResponse.data;
     const [latitude, longitude] = loc.split(',');
 
