@@ -47,8 +47,7 @@ const InspectionSchema = new mongoose.Schema({
   pta: { type: Map, of: PtaOptionSchema }, 
   accessories: { type: String },
   // Customer details
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
+  fullName: { type: String, required: true },
   whatsapp: { type: String, required: true },
   isInLahore: { type: Boolean, required: true },
   buyingPreference: { type: String, required: true },
