@@ -145,8 +145,8 @@ router.post('/', upload.array('images', 10), async (req, res) => {
     ];
 
     const defaultPTA = [
-      { option: 'Is your iPhone PTA Approved?', deductionPercentage: 0 },
-      { option: 'Is your iPhone Factory Unlocked?', deductionPercentage: 0 }
+      { option: 'Is Your iPhone PTA Approved?', deductionPercentage: 0 },
+      { option: 'Is Your iPhone Factory Unlocked?', deductionPercentage: 0 }
     ];
 
     const defaultAccessories = [
@@ -185,20 +185,121 @@ router.post('/', upload.array('images', 10), async (req, res) => {
   }
 });
 
+
 // Update iPhone fields
 router.put('/:id', async (req, res) => {
   try {
-    const updateData = req.body;
+    const {
+      storageSizes,
+      batteryHealth,
+      cosmeticIssues,
+      faults,
+      repairs,
+      frontScreen,
+      back,
+      side,
+      simVariant,
+      pta,
+      accessories,
+    } = req.body;
 
-    const updatedIPhone = await iPhone.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedIPhone) {
+    const existingIPhone = await iPhone.findById(req.params.id);
+    if (!existingIPhone) {
       return res.status(404).json({ message: 'iPhone not found' });
     }
+
+    // Update each category separately
+    if (storageSizes) {
+      existingIPhone.storageSizes = storageSizes.map((size) => ({
+        size: size.size,
+        deductionPercentage: size.deductionPercentage || 0, // Default to 0 if not provided
+      }));
+    }
+
+    if (batteryHealth) {
+      existingIPhone.batteryHealth = batteryHealth.map((item) => ({
+        health: item.health,
+        deductionPercentage: item.deductionPercentage || 0,
+      }));
+    }
+
+    if (cosmeticIssues) {
+      existingIPhone.cosmeticIssues = cosmeticIssues.map((item) => ({
+        header: item.header,
+        condition: item.condition,
+        deductionPercentage: item.deductionPercentage || 0,
+        image: item.image || '',
+      }));
+    }
+
+    if (faults) {
+      existingIPhone.faults = faults.map((item) => ({
+        header: item.header,
+        condition: item.condition,
+        deductionPercentage: item.deductionPercentage || 0,
+        image: item.image || '',
+      }));
+    }
+
+    if (repairs) {
+      existingIPhone.repairs = repairs.map((item) => ({
+        repair: item.repair,
+        deductionPercentage: item.deductionPercentage || 0,
+        image: item.image || '',
+      }));
+    }
+
+    if (frontScreen) {
+      existingIPhone.frontScreen = frontScreen.map((item) => ({
+        header: item.header,
+        condition: item.condition,
+        deductionPercentage: item.deductionPercentage || 0,
+        image: item.image || '',
+      }));
+    }
+
+    if (back) {
+      existingIPhone.back = back.map((item) => ({
+        header: item.header,
+        condition: item.condition,
+        deductionPercentage: item.deductionPercentage || 0,
+        image: item.image || '',
+      }));
+    }
+
+    if (side) {
+      existingIPhone.side = side.map((item) => ({
+        header: item.header,
+        condition: item.condition,
+        deductionPercentage: item.deductionPercentage || 0,
+        image: item.image || '',
+      }));
+    }
+
+    if (simVariant) {
+      existingIPhone.simVariant = simVariant.map((item) => ({
+        option: item.option,
+        deductionPercentage: item.deductionPercentage || 0,
+      }));
+    }
+
+    if (pta) {
+      existingIPhone.pta = pta.map((item) => ({
+        option: item.option,
+        deductionPercentage: item.deductionPercentage || 0,
+      }));
+    }
+
+    if (accessories) {
+      existingIPhone.accessories = accessories.map((item) => ({
+        option: item.option,
+        deductionPercentage: item.deductionPercentage || 0,
+        image: item.image || '',
+      }));
+    }
+
+    // Save the updated iPhone document
+    const updatedIPhone = await existingIPhone.save();
 
     res.json(updatedIPhone);
   } catch (error) {
@@ -206,6 +307,7 @@ router.put('/:id', async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
 
 // Route to get all iPhones or fetch by ID
 router.get('/', async (req, res) => {
