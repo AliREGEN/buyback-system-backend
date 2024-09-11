@@ -26,11 +26,11 @@ router.post('/', async (req, res) => {
       pta,
       accessories,
       // Customer details
-      firstName,
-      lastName,
+      fullName,
       whatsapp,
       isInLahore,
       buyingPreference,
+      address,
       // IP and Location
       location,
     } = req.body;
@@ -65,11 +65,11 @@ router.post('/', async (req, res) => {
       pta,
       accessories,
       // Store customer details
-      firstName,
-      lastName,
+      fullName,
       whatsapp,
       isInLahore,
       buyingPreference,
+      address,
       ipAddress,
       location,
     });
