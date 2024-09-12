@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 const Inspection = require('../models/Inspection');
+const apiKeyMiddleware = require('../middleware/apiKeyMiddleware');
 
 // Route to create a new inspection
 router.post('/', async (req, res) => {
@@ -101,7 +102,7 @@ router.get('/get-ip-location', async (req, res) => {
 });
 
 // Route to get all inspections
-router.get('/', async (req, res) => {
+router.get('/', apiKeyMiddleware, async (req, res) => {
   try {
     const inspections = await Inspection.find();
     res.status(200).json(inspections);

@@ -29,7 +29,7 @@ const uploadToCloudinary = (file, fileName) => {
 };
 
 // Route to add a new iPhone
-router.post('/', upload.array('images', 10), async (req, res) => {
+router.post('/', upload.any(), async (req, res) => {
   try {
     console.log('Received Body: ', req.body);
     console.log('Received Files: ', req.files);
