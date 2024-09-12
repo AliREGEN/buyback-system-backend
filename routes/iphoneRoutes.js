@@ -187,9 +187,11 @@ router.post('/', upload.array('images', 10), async (req, res) => {
 
 
 // Update iPhone fields
-router.put('/:id', async (req, res) => {
+router.put('/:id', upload.any(), async (req, res) => {
   try {
     const {
+      modelName,
+      maxPrice,
       storageSizes,
       batteryHealth,
       cosmeticIssues,
@@ -201,6 +203,7 @@ router.put('/:id', async (req, res) => {
       simVariant,
       pta,
       accessories,
+      colors // Colors as comma-separated string
     } = req.body;
 
     const existingIPhone = await iPhone.findById(req.params.id);
@@ -208,23 +211,59 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ message: 'iPhone not found' });
     }
 
-    // Update each category separately
+    // Logging received body and files for debugging
+    console.log('Received Body:', req.body);
+    console.log('Received Files:', req.files);
+
+    // Update basic fields
+    if (modelName) existingIPhone.modelName = modelName;
+    if (maxPrice) existingIPhone.maxPrice = maxPrice;
+
+    // Handle colors and image uploads
+    if (colors) {
+      const colorsArray = colors.split(',');
+
+      const updatedColors = await Promise.all(colorsArray.map(async (color) => {
+        const existingColor = existingIPhone.colors.find(c => c.color === color);
+        const uploadedImage = req.files.find(file => file.fieldname === `images_${color}`);
+
+        console.log(`Processing color: ${color}, existingColor: ${existingColor ? existingColor.color : 'N/A'}`);
+
+        let imageUrl = existingColor?.image || '';
+
+        if (uploadedImage) {
+          console.log(`Uploading image for color: ${color}`);
+          const fileName = `${modelName.replace(/\s/g, '_')}_${color}_${uuidv4()}`;
+          imageUrl = await uploadToCloudinary(uploadedImage, fileName);
+          console.log(`Uploaded image URL: ${imageUrl}`);
+        }
+
+        return { color, image: imageUrl };
+      }));
+
+      existingIPhone.colors = updatedColors;
+    }
+
+    // Update storage sizes (ensure storageSizes is an array)
     if (storageSizes) {
-      existingIPhone.storageSizes = storageSizes.map((size) => ({
-        size: size.size,
+      const storageSizesArray = Array.isArray(storageSizes) ? storageSizes : storageSizes.split(',');
+      existingIPhone.storageSizes = storageSizesArray.map(size => ({
+        size: typeof size === 'object' ? size.size : size, // Handle case if size is an object
         deductionPercentage: size.deductionPercentage || 0, // Default to 0 if not provided
       }));
     }
 
-    if (batteryHealth) {
-      existingIPhone.batteryHealth = batteryHealth.map((item) => ({
+    // Update battery health
+    if (Array.isArray(batteryHealth)) {
+      existingIPhone.batteryHealth = batteryHealth.map(item => ({
         health: item.health,
         deductionPercentage: item.deductionPercentage || 0,
       }));
     }
 
-    if (cosmeticIssues) {
-      existingIPhone.cosmeticIssues = cosmeticIssues.map((item) => ({
+    // Update cosmetic issues
+    if (Array.isArray(cosmeticIssues)) {
+      existingIPhone.cosmeticIssues = cosmeticIssues.map(item => ({
         header: item.header,
         condition: item.condition,
         deductionPercentage: item.deductionPercentage || 0,
@@ -232,8 +271,9 @@ router.put('/:id', async (req, res) => {
       }));
     }
 
-    if (faults) {
-      existingIPhone.faults = faults.map((item) => ({
+    // Update faults
+    if (Array.isArray(faults)) {
+      existingIPhone.faults = faults.map(item => ({
         header: item.header,
         condition: item.condition,
         deductionPercentage: item.deductionPercentage || 0,
@@ -241,16 +281,18 @@ router.put('/:id', async (req, res) => {
       }));
     }
 
-    if (repairs) {
-      existingIPhone.repairs = repairs.map((item) => ({
+    // Update repairs
+    if (Array.isArray(repairs)) {
+      existingIPhone.repairs = repairs.map(item => ({
         repair: item.repair,
         deductionPercentage: item.deductionPercentage || 0,
         image: item.image || '',
       }));
     }
 
-    if (frontScreen) {
-      existingIPhone.frontScreen = frontScreen.map((item) => ({
+    // Update front screen
+    if (Array.isArray(frontScreen)) {
+      existingIPhone.frontScreen = frontScreen.map(item => ({
         header: item.header,
         condition: item.condition,
         deductionPercentage: item.deductionPercentage || 0,
@@ -258,8 +300,9 @@ router.put('/:id', async (req, res) => {
       }));
     }
 
-    if (back) {
-      existingIPhone.back = back.map((item) => ({
+    // Update back
+    if (Array.isArray(back)) {
+      existingIPhone.back = back.map(item => ({
         header: item.header,
         condition: item.condition,
         deductionPercentage: item.deductionPercentage || 0,
@@ -267,8 +310,9 @@ router.put('/:id', async (req, res) => {
       }));
     }
 
-    if (side) {
-      existingIPhone.side = side.map((item) => ({
+    // Update side
+    if (Array.isArray(side)) {
+      existingIPhone.side = side.map(item => ({
         header: item.header,
         condition: item.condition,
         deductionPercentage: item.deductionPercentage || 0,
@@ -276,29 +320,32 @@ router.put('/:id', async (req, res) => {
       }));
     }
 
-    if (simVariant) {
-      existingIPhone.simVariant = simVariant.map((item) => ({
+    // Update simVariant
+    if (Array.isArray(simVariant)) {
+      existingIPhone.simVariant = simVariant.map(item => ({
         option: item.option,
         deductionPercentage: item.deductionPercentage || 0,
       }));
     }
 
-    if (pta) {
-      existingIPhone.pta = pta.map((item) => ({
+    // Update PTA
+    if (Array.isArray(pta)) {
+      existingIPhone.pta = pta.map(item => ({
         option: item.option,
         deductionPercentage: item.deductionPercentage || 0,
       }));
     }
 
-    if (accessories) {
-      existingIPhone.accessories = accessories.map((item) => ({
+    // Update accessories
+    if (Array.isArray(accessories)) {
+      existingIPhone.accessories = accessories.map(item => ({
         option: item.option,
         deductionPercentage: item.deductionPercentage || 0,
         image: item.image || '',
       }));
     }
 
-    // Save the updated iPhone document
+    // Save updated iPhone document
     const updatedIPhone = await existingIPhone.save();
 
     res.json(updatedIPhone);
@@ -307,6 +354,7 @@ router.put('/:id', async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
 
 
 // Route to get all iPhones or fetch by ID
