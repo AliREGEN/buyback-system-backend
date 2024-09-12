@@ -2,7 +2,6 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 const Inspection = require('../models/Inspection');
-const apiKeyMiddleware = require('../middleware/apiKeyMiddleware');
 
 // Route to create a new inspection
 router.post('/', async (req, res) => {
@@ -36,8 +35,9 @@ router.post('/', async (req, res) => {
       location,
     } = req.body;
 
-    const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
+    // Create new inspection object
     const newInspection = new Inspection({
       modelName,
       maxPrice,
@@ -65,7 +65,6 @@ router.post('/', async (req, res) => {
       side,
       pta,
       accessories,
-      // Store customer details
       fullName,
       whatsapp,
       isInLahore,
@@ -75,10 +74,48 @@ router.post('/', async (req, res) => {
       location,
     });
 
+    // Save inspection to MongoDB
     await newInspection.save();
+
+    // Send data to Zapier webhook
+    const zapierWebhookUrl = 'https://hooks.zapier.com/hooks/catch/12005261/2hi9mrt/';
+
+    // Prepare the payload to send to Zapier
+    const zapierPayload = {
+      modelName,
+      maxPrice,
+      finalPrice,
+      storageSize,
+      colorOption,
+      simOption,
+      batteryHealth,
+      isFunctional,
+      isRepaired,
+      isDamaged,
+      faults,
+      repair,
+      cosmeticIssues,
+      frontScreen,
+      back,
+      side,
+      pta,
+      accessories,
+      fullName,
+      whatsapp,
+      isInLahore,
+      buyingPreference,
+      address,
+      ipAddress,
+      location,
+    };
+
+    // Send POST request to Zapier webhook
+    await axios.post(zapierWebhookUrl, zapierPayload);
+
+    // Respond with success
     res.status(201).json(newInspection);
   } catch (error) {
-    console.error('Error saving inspection:', error);
+    console.error('Error saving inspection or sending to Zapier:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 });
@@ -102,7 +139,7 @@ router.get('/get-ip-location', async (req, res) => {
 });
 
 // Route to get all inspections
-router.get('/', apiKeyMiddleware, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const inspections = await Inspection.find();
     res.status(200).json(inspections);
