@@ -14,6 +14,11 @@ const CosmeticIssuesSchema = new mongoose.Schema({
   image: { type: String, default: '' }, // Image can be updated later
 });
 
+const PaymentOptionsSchema = new mongoose.Schema({
+  option: { type: String, required: true, enum: ['Instant Cash', 'Store Credit'] },
+  deductionPercentage: { type: Number, default: 0 },
+});
+
 const FaultsSchema = new mongoose.Schema({
   header: { type: String, required: true },
   condition: { type: String, required: true },
@@ -70,6 +75,7 @@ const iPhoneSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   modelName: { type: String, required: true, unique: true },
   maxPrice: { type: Number, required: true },
+  paymentOptions: { type: [PaymentOptionsSchema], default: undefined },
   colors: [
     {
       color: { type: String, required: true },

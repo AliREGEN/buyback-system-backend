@@ -127,16 +127,27 @@ router.get('/get-ip-location', async (req, res) => {
   try {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
+    // Fetch location data from IPinfo
     const locationResponse = await axios.get(`https://ipinfo.io/${ip}/geo?token=${process.env.IPINFO_TOKEN}`);
     const { city, region, country, loc } = locationResponse.data;
-    const [latitude, longitude] = loc.split(',');
+
+    let latitude, longitude;
+
+    // Check if 'loc' is available and split it correctly
+    if (loc) {
+      [latitude, longitude] = loc.split(',');
+    } else {
+      latitude = null;
+      longitude = null;
+    }
 
     res.status(200).json({ ip, city, region, country, latitude, longitude });
   } catch (error) {
-    console.error('Error fetching IP/location:', error);
+    console.error('Error fetching IP/location:', error.message);
     res.status(500).json({ message: 'Failed to fetch IP and location.' });
   }
 });
+
 
 // Route to get all inspections
 router.get('/', async (req, res) => {

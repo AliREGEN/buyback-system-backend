@@ -34,7 +34,7 @@ router.post('/', upload.any(), async (req, res) => {
     console.log('Received Body: ', req.body);
     console.log('Received Files: ', req.files);
 
-    const { modelName, maxPrice, colors, storageSizes } = req.body;
+    const { modelName, maxPrice, colors, storageSizes, paymentOptions } = req.body;
     
     const colorsArray = colors ? colors.split(',') : [];
     const storageSizesArray = storageSizes ? storageSizes.split(',') : [];
@@ -85,6 +85,10 @@ router.post('/', upload.any(), async (req, res) => {
       { header: 'Damaged Camera Lens', condition: 'Cracked/Shattered', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/c_crop,g_auto,h_800,w_800/static/ytdbzp9swiq1ndj1ax9b.jpg' },
       { header: 'Damaged Frame', condition: 'Broken/Bent', deductionPercentage: 0, image: '' }
     ];
+
+    const paymentOptionsArray = Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]');
+    console.log('Payment Options Array: ', paymentOptionsArray);
+
 
     const defaultFaults = [
       { header: 'Faulty Display', condition: 'Dead Pixels/Spots/Lines', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/xypgkalx2bsb4fqvtrkx' },
@@ -164,6 +168,7 @@ router.post('/', upload.any(), async (req, res) => {
         size: size,
         deductionPercentage: 0,
       })),
+      paymentOptions: paymentOptionsArray,
       batteryHealth: batteryHealthOptions,
       cosmeticIssues: defaultCosmeticIssues,
       faults: defaultFaults,
@@ -193,6 +198,7 @@ router.put('/:id', upload.any(), async (req, res) => {
       modelName,
       maxPrice,
       storageSizes,
+      paymentOptions,
       batteryHealth,
       cosmeticIssues,
       faults,
@@ -252,6 +258,15 @@ router.put('/:id', upload.any(), async (req, res) => {
         deductionPercentage: size.deductionPercentage || 0, // Default to 0 if not provided
       }));
     }
+
+    // Update payment options
+if (Array.isArray(paymentOptions)) {
+  existingIPhone.paymentOptions = paymentOptions.map(item => ({
+    option: item.option,
+    deductionPercentage: item.deductionPercentage || 0,  // Ensure the deduction is not overridden as 0
+  }));
+}
+
 
     // Update battery health
     if (Array.isArray(batteryHealth)) {
