@@ -260,12 +260,18 @@ router.put('/:id', upload.any(), async (req, res) => {
     }
 
     // Update payment options
-if (Array.isArray(paymentOptions)) {
-  existingIPhone.paymentOptions = paymentOptions.map(item => ({
-    option: item.option,
-    deductionPercentage: item.deductionPercentage || 0,  // Ensure the deduction is not overridden as 0
-  }));
-}
+        // **Update payment options**
+    if (paymentOptions) {
+      const paymentOptionsArray = Array.isArray(paymentOptions)
+        ? paymentOptions
+        : JSON.parse(paymentOptions);
+
+      // Check and update paymentOptions
+      existingIPhone.paymentOptions = paymentOptionsArray.map(item => ({
+        option: item.option,
+        deductionPercentage: item.deductionPercentage || 0,
+      }));
+    }
 
 
     // Update battery health

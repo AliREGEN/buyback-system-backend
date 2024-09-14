@@ -15,7 +15,7 @@ const CosmeticIssuesSchema = new mongoose.Schema({
 });
 
 const PaymentOptionsSchema = new mongoose.Schema({
-  option: { type: String, required: true, enum: ['Instant Cash', 'Store Credit'] },
+  option: { type: String, required: true, enum: ['Store Credit', 'Instant Cash'] },
   deductionPercentage: { type: Number, default: 0 },
 });
 
