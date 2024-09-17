@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 
-// Define sub-schemas for each category
-
+// Define sub-schemas for categories that remain the same
 const BatteryHealthSchema = new mongoose.Schema({
   health: { type: String, required: true },
   deductionPercentage: { type: Number, default: 0 },
@@ -33,48 +32,46 @@ const RepairSchema = new mongoose.Schema({
 });
 
 const FrontScreenSchema = new mongoose.Schema({
-  header: { type: String, required: true},
-  condition: { type: String, required: true },
-  deductionPercentage: { type: Number, default: 0 },
-  image: { type: String, default: '' }, // Image can be updated later
-});
-
-const BackSchema = new mongoose.Schema({
-  header: { type: String, required: true},
-  condition: { type: String, required: true },
-  deductionPercentage: { type: Number, default: 0 },
-  image: { type: String, default: '' }, // Image can be updated later
-});
-
-const SideSchema = new mongoose.Schema({
   header: { type: String, required: true },
   condition: { type: String, required: true },
   deductionPercentage: { type: Number, default: 0 },
   image: { type: String, default: '' }, // Image can be updated later
 });
 
-const SIMVariantSchema = new mongoose.Schema({
-  option: { type: String, required: true, enum: ['Dual eSIM', 'Dual Physical SIM', 'eSIM + Physical SIM'] },
-  deductionPercentage: { type: Number, default: 0 },
-});
-
-const PTASchema = new mongoose.Schema({
-  option: { type: String, required: true, enum: ['Is Your iPhone PTA Approved?', 'Is Your iPhone Factory Unlocked?'] },
-  deductionPercentage: { type: Number, default: 0 },
-});
-
-const AccessoriesSchema = new mongoose.Schema({
-  option: { type: String, required: true, enum: ['Everything (Complete Box)', 'Box Only', 'iPhone Only'] },
+const BodySchema = new mongoose.Schema({
+  header: { type: String, required: true},
+  condition: { type: String, required: true },
   deductionPercentage: { type: Number, default: 0 },
   image: { type: String, default: '' }, // Image can be updated later
 });
 
-// Main iPhone schema
+const ConnectivitySchema = new mongoose.Schema({
+  option: { type: String, required: true, enum: ['WiFi + Cellular', 'WiFi Only'] },
+  deductionPercentage: { type: Number, default: 0 },
+});
 
-const iPhoneSchema = new mongoose.Schema({
+const ApplePencilSchema = new mongoose.Schema({
+  generation: { type: String, required: true },
+  condition: { type: String, required: true },
+  deductionPercentage: { type: Number, default: 0 },
+});
+
+const AccessoriesSchema = new mongoose.Schema({
+  option: { type: String, required: true, enum: ['Everything (Complete Box)', 'Box Only', 'iPad Only'] },
+  deductionPercentage: { type: Number, default: 0 },
+  image: { type: String, default: '' }, // Image can be updated later
+});
+
+const PTASchema = new mongoose.Schema({
+  option: { type: String, required: true, enum: ['Is Your iPad PTA Approved?', 'Is Your iPad Factory Unlocked?'] },
+  deductionPercentage: { type: Number, default: 0 },
+});
+
+// Main iPad schema
+const iPadSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   vendor: { type: String, required: true, default: 'Apple' },
-  deviceType: { type: String, required: true, default: 'Smartphone' },
+  deviceType: { type: String, required: true, default: 'Tablet' },
   modelName: { type: String, required: true, unique: true },
   maxPrice: { type: Number, required: true },
   paymentOptions: { type: [PaymentOptionsSchema], default: undefined },
@@ -95,11 +92,11 @@ const iPhoneSchema = new mongoose.Schema({
   faults: { type: [FaultsSchema], default: undefined },
   repairs: { type: [RepairSchema], default: undefined },
   frontScreen: { type: [FrontScreenSchema], default: undefined },
-  back: { type: [BackSchema], default: undefined },
-  side: { type: [SideSchema], default: undefined },
-  simVariant: { type: [SIMVariantSchema], default: undefined },
+  body: { type: [BodySchema], default: undefined },
+  connectivity: { type: [ConnectivitySchema], default: undefined },
+  applePencil: { type: [ApplePencilSchema], default: undefined },
   pta: { type: [PTASchema], default: undefined },
   accessories: { type: [AccessoriesSchema], default: undefined },
 });
 
-module.exports = mongoose.model('iPhone', iPhoneSchema);
+module.exports = mongoose.model('iPad', iPadSchema);

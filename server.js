@@ -17,6 +17,8 @@ app.use(express.json());
 // Routes
 app.use('/api/iphones', require('./routes/iphoneRoutes'));
 app.use('/api/inspections', require('./routes/inspectionRoutes'));
+app.use('/api/ipads', require('./routes/ipadRoutes'));
+app.use('/api/samsung', require('./routes/samsungRoutes'));
 
 
 const PORT = process.env.PORT || 5000;

@@ -14,6 +14,17 @@ const CosmeticIssueSchema = new mongoose.Schema({
   value: { type: String, required: true },
 });
 
+const paymentOptionSchema = new mongoose.Schema({
+  option: {
+    type: String,
+    required: true
+  },
+  deductionPercentage: {
+    type: Number,
+    required: true
+  }
+});
+
 const FaultOptionSchema = new mongoose.Schema({
   header: { type: String, required: true }, 
   value: { type: String, required: true },
@@ -34,6 +45,7 @@ const InspectionSchema = new mongoose.Schema({
   storageSize: { type: String, required: true },
   colorOption: { type: String, required: true },
   simOption: { type: String },
+  connectivity: { type: String },
   batteryHealth: { type: String },
   isFunctional: { type: String },
   faults: { type: [FaultOptionSchema] }, 
@@ -44,8 +56,18 @@ const InspectionSchema = new mongoose.Schema({
   frontScreen: { type: String },
   back: { type: String },
   side: { type: String },
+  body: { type: String },
   pta: { type: Map, of: PtaOptionSchema }, 
   accessories: { type: String },
+    applePencil: {
+    generation: { type: String, required: true },
+    condition: { type: String, required: true },
+    deductionPercentage: { type: Number, default: 0 },
+  },
+  paymentOption: {
+    type: paymentOptionSchema, // Embed the payment option schema
+    required: true
+  },
   // Customer details
   fullName: { type: String, required: true },
   whatsapp: { type: String, required: true },
