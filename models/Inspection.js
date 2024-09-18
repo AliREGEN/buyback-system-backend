@@ -38,12 +38,26 @@ const LocationSchema = new mongoose.Schema({
   longitude: { type: Number },
 });
 
+const ProcessorOptionSchema = new mongoose.Schema({
+  type: { type: String },
+  cpuCores: { type: String },
+  gpuCores: { type: String },
+  speed: { type: String },
+});
+
+const applePencilSchema = new mongoose.Schema({
+  generation: { type: String },
+  condition: { type: String },
+});
+
 const InspectionSchema = new mongoose.Schema({
   modelName: { type: String, required: true },
   maxPrice: { type: Number, required: true },
   finalPrice: { type: Number, required: true },
   storageSize: { type: String, required: true },
   colorOption: { type: String, required: true },
+  memorySize: { type: String },
+  processorType: { type: [ProcessorOptionSchema], default: undefined },
   simOption: { type: String },
   connectivity: { type: String },
   batteryHealth: { type: String },
@@ -59,11 +73,7 @@ const InspectionSchema = new mongoose.Schema({
   body: { type: String },
   pta: { type: Map, of: PtaOptionSchema }, 
   accessories: { type: String },
-    applePencil: {
-    generation: { type: String, required: true },
-    condition: { type: String, required: true },
-    deductionPercentage: { type: Number, default: 0 },
-  },
+  applePencil: { type: [applePencilSchema], default: undefined},
   paymentOption: {
     type: paymentOptionSchema, // Embed the payment option schema
     required: true

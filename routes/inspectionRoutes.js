@@ -13,6 +13,8 @@ router.post('/', async (req, res) => {
       storageSize,
       colorOption,
       simOption,
+      memorySize,
+      processorType,
       connectivity,
       batteryHealth,
       isFunctional,
@@ -41,6 +43,13 @@ router.post('/', async (req, res) => {
 
     const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
+      const newProcessorType = {
+      type: processorType.type, // e.g., "Apple M1"
+      cpuCores: processorType.cpuCores, // e.g., 8
+      gpuCores: processorType.gpuCores, // e.g., 8
+      speed: processorType.speed, // e.g., 3.2 GHz
+    };
+
     // Create new inspection object
     const newInspection = new Inspection({
       modelName,
@@ -49,6 +58,8 @@ router.post('/', async (req, res) => {
       storageSize,
       colorOption,
       simOption,
+      memorySize,
+      processorType: newProcessorType,
       connectivity,
       batteryHealth,
       isFunctional,
@@ -96,6 +107,8 @@ router.post('/', async (req, res) => {
       storageSize,
       colorOption,
       simOption,
+      memorySize,
+      processorType: newProcessorType,
       connectivity,
       batteryHealth,
       isFunctional,

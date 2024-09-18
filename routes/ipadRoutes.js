@@ -314,7 +314,7 @@ router.put('/:id', upload.any(), async(req, res) => {
     }
 
     if (Array.isArray(pta)) {
-      existingIPhone.pta = pta.map(item => ({
+      existingIPad.pta = pta.map(item => ({
         option: item.option,
         deductionPercentage: item.deductionPercentage || 0,
       }));

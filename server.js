@@ -19,6 +19,7 @@ app.use('/api/iphones', require('./routes/iphoneRoutes'));
 app.use('/api/inspections', require('./routes/inspectionRoutes'));
 app.use('/api/ipads', require('./routes/ipadRoutes'));
 app.use('/api/samsung', require('./routes/samsungRoutes'));
+app.use('/api/macbooks', require('./routes/macbookRoutes'));
 
 
 const PORT = process.env.PORT || 5000;
