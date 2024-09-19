@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Reused Schemas
 const PtaOptionSchema = new mongoose.Schema({
   value: { type: String, required: true },
   deductionPercentage: { type: Number, required: true },
@@ -14,19 +15,13 @@ const CosmeticIssueSchema = new mongoose.Schema({
   value: { type: String, required: true },
 });
 
-const paymentOptionSchema = new mongoose.Schema({
-  option: {
-    type: String,
-    required: true
-  },
-  deductionPercentage: {
-    type: Number,
-    required: true
-  }
+const PaymentOptionSchema = new mongoose.Schema({
+  option: { type: String, required: true },
+  deductionPercentage: { type: Number, required: true },
 });
 
 const FaultOptionSchema = new mongoose.Schema({
-  header: { type: String, required: true }, 
+  header: { type: String, required: true },
   value: { type: String, required: true },
 });
 
@@ -45,39 +40,43 @@ const ProcessorOptionSchema = new mongoose.Schema({
   speed: { type: String },
 });
 
-const applePencilSchema = new mongoose.Schema({
+const ApplePencilSchema = new mongoose.Schema({
   generation: { type: String },
   condition: { type: String },
 });
 
+// Main Inspection Schema
 const InspectionSchema = new mongoose.Schema({
   modelName: { type: String, required: true },
   maxPrice: { type: Number, required: true },
   finalPrice: { type: Number, required: true },
-  storageSize: { type: String, required: true },
-  colorOption: { type: String, required: true },
+  watchCaseType: { type: String }, // For watches
+  watchCaseFinish: { type: String }, // For watches
+  watchCaseSize: { type: String }, // For watches
+  bandsType: { type: String }, // For watches
+  strapCondition: { type: String }, // New field for strap condition
+  bodyCondition: { type: String }, // New field for body condition
+  storageSize: { type: String },
+  colorOption: { type: String },
   memorySize: { type: String },
-  processorType: { type: [ProcessorOptionSchema], default: undefined },
+  processorType: { type: ProcessorOptionSchema, default: undefined },
   simOption: { type: String },
   connectivity: { type: String },
   batteryHealth: { type: String },
   isFunctional: { type: String },
-  faults: { type: [FaultOptionSchema] }, 
+  faults: { type: [FaultOptionSchema] },
   isRepaired: { type: String },
-  repair: { type: [RepairOptionSchema] }, 
+  repair: { type: [RepairOptionSchema] },
   isDamaged: { type: String },
-  cosmeticIssues: { type: [CosmeticIssueSchema] }, 
+  cosmeticIssues: { type: [CosmeticIssueSchema] },
   frontScreen: { type: String },
   back: { type: String },
   side: { type: String },
   body: { type: String },
-  pta: { type: Map, of: PtaOptionSchema }, 
+  pta: { type: Map, of: PtaOptionSchema },
   accessories: { type: String },
-  applePencil: { type: [applePencilSchema], default: undefined},
-  paymentOption: {
-    type: paymentOptionSchema, // Embed the payment option schema
-    required: true
-  },
+  applePencil: { type: [ApplePencilSchema], default: undefined },
+  paymentOption: { type: PaymentOptionSchema, required: true },
   // Customer details
   fullName: { type: String, required: true },
   whatsapp: { type: String, required: true },

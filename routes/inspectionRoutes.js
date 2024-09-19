@@ -4,12 +4,19 @@ const router = express.Router();
 const Inspection = require('../models/Inspection');
 
 // Route to create a new inspection
+// Route to create a new inspection
 router.post('/', async (req, res) => {
   try {
     const {
       modelName,
       maxPrice,
       finalPrice,
+      watchCaseType,
+      watchCaseFinish,
+      watchCaseSize,
+      bandsType,
+      strapCondition,  // Added
+      bodyCondition,   // Added
       storageSize,
       colorOption,
       simOption,
@@ -43,18 +50,25 @@ router.post('/', async (req, res) => {
 
     const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-      const newProcessorType = {
-      type: processorType.type, // e.g., "Apple M1"
-      cpuCores: processorType.cpuCores, // e.g., 8
-      gpuCores: processorType.gpuCores, // e.g., 8
-      speed: processorType.speed, // e.g., 3.2 GHz
-    };
+    // Construct processorType if present
+    const newProcessorType = processorType ? {
+      type: processorType.type, 
+      cpuCores: processorType.cpuCores, 
+      gpuCores: processorType.gpuCores, 
+      speed: processorType.speed,
+    } : undefined;
 
     // Create new inspection object
     const newInspection = new Inspection({
       modelName,
       maxPrice,
       finalPrice,
+      watchCaseType,
+      watchCaseFinish,
+      watchCaseSize,
+      bandsType,
+      strapCondition,  // Added
+      bodyCondition,   // Added
       storageSize,
       colorOption,
       simOption,
@@ -96,48 +110,12 @@ router.post('/', async (req, res) => {
     // Save inspection to MongoDB
     await newInspection.save();
 
-    // Send data to Zapier webhook
+    // Send POST request to Zapier webhook (optional)
     const zapierWebhookUrl = 'https://hooks.zapier.com/hooks/catch/12005261/2hi9mrt/';
+    const zapierPayload = { ...newInspection._doc }; // Simplified payload
 
-    // Prepare the payload to send to Zapier
-    const zapierPayload = {
-      modelName,
-      maxPrice,
-      finalPrice,
-      storageSize,
-      colorOption,
-      simOption,
-      memorySize,
-      processorType: newProcessorType,
-      connectivity,
-      batteryHealth,
-      isFunctional,
-      isRepaired,
-      isDamaged,
-      faults,
-      repair,
-      cosmeticIssues,
-      frontScreen,
-      back,
-      side,
-      body,
-      pta,
-      accessories,
-      applePencil,
-      paymentOption,
-      fullName,
-      whatsapp,
-      isInLahore,
-      buyingPreference,
-      address,
-      ipAddress,
-      location,
-    };
-
-    // Send POST request to Zapier webhook
     await axios.post(zapierWebhookUrl, zapierPayload);
 
-    // Respond with success
     res.status(201).json(newInspection);
   } catch (error) {
     console.error('Error saving inspection or sending to Zapier:', error);
