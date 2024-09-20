@@ -36,21 +36,18 @@ const FrontScreenSchema = new mongoose.Schema({
   header: { type: String, required: true},
   condition: { type: String, required: true },
   deductionPercentage: { type: Number, default: 0 },
-  image: { type: String, default: '' }, // Image can be updated later
 });
 
 const BackSchema = new mongoose.Schema({
   header: { type: String, required: true},
   condition: { type: String, required: true },
   deductionPercentage: { type: Number, default: 0 },
-  image: { type: String, default: '' }, // Image can be updated later
 });
 
 const SideSchema = new mongoose.Schema({
   header: { type: String, required: true },
   condition: { type: String, required: true },
   deductionPercentage: { type: Number, default: 0 },
-  image: { type: String, default: '' }, // Image can be updated later
 });
 
 const SIMVariantSchema = new mongoose.Schema({
