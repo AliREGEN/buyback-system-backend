@@ -128,17 +128,8 @@ const defaultAccessories = [
 ];
 
 const defaultBandsType = [
-  { option: 'Sport Band', deductionPercentage: 0, image: 'https://link_to_image' },
-  { option: 'Sport Loop', deductionPercentage: 0, image: 'https://link_to_image' },
-  { option: 'Leather Loop', deductionPercentage: 0, image: 'https://link_to_image' },
-  { option: 'Leather Link', deductionPercentage: 0, image: 'https://link_to_image' },
-  { option: 'Milanese Loop', deductionPercentage: 0, image: 'https://link_to_image' },
-  { option: 'Link Bracelet', deductionPercentage: 0, image: 'https://link_to_image' },
-  { option: 'Modern Buckle', deductionPercentage: 0, image: 'https://link_to_image' },
-  { option: 'Classic Buckle', deductionPercentage: 0, image: 'https://link_to_image' },
-  { option: 'Hermes', deductionPercentage: 0, image: 'https://link_to_image' },
-  { option: 'Nike', deductionPercentage: 0, image: 'https://link_to_image' },
-  { option: 'Aftermarket Band', deductionPercentage: 0, image: 'https://link_to_image' },
+  { option: 'Original Band', deductionPercentage: 0 },
+  { option: 'Aftermarket Band', deductionPercentage: 0 },
 ];
 
 const watchCaseTypeArray = watchCaseType

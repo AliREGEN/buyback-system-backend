@@ -20,7 +20,7 @@ const PaymentOptionsSchema = new mongoose.Schema({
 });
 
 const BandsTypeSchema = new mongoose.Schema({
-    option: { type: String, required: true, enum: ['Sport Band', 'Sport Loop', 'Leather Loop', 'Leather Link', 'Milanese Loop', 'Link Bracelet', 'Modern Buckle', 'Classic Buckle', 'Hermes', 'Nike', 'Aftermarket Band'] },
+    option: { type: String, required: true, enum: ['Original Band', 'Aftermarket Band'] },
     deductionPercentage: { type: Number, default: 0 },
     image: { type: String, default: '' }, // Image can be updated later
 });
