@@ -81,17 +81,17 @@ const defaultCosmeticIssues = [
 ];
 
 const defaultStrapCondition = [
-  { header: 'Excellent', condition: 'Minimal Wear', deductionPercentage: 0, image: '' },
-  { header: 'Good', condition: 'Visible Wear', deductionPercentage: 0, image: '' },
-  { header: 'Fair', condition: 'Heavily Worn', deductionPercentage: 0, image: '' },
-  { header: 'Acceptable', condition: 'Damaged', deductionPercentage: 0, image: '' },
+      { header: 'Excellent', condition: '1 - 2 hardly visible wear and tear or minimal signs of use', deductionPercentage: 0 },
+      { header: 'Good', condition: 'Some visible signs of usage, but no deep wear and tear', deductionPercentage: 0},
+      { header: 'Fair', condition: 'Visible signs of usage, 1 - 2 minor deep wear and tear', deductionPercentage: 0 },
+      { header: 'Acceptable', condition: 'Torn out, noticeable deep wear and tear', deductionPercentage: 0 },
 ];
 
 const defaultBodyCondition = [
-    { header: 'Excellent', condition: 'Minimal Scratches', deductionPercentage: 0, image: '' },
-    { header: 'Good', condition: 'Few Scratches', deductionPercentage: 0, image: '' },
-    { header: 'Fair', condition: 'Visible Scratches', deductionPercentage: 0, image: '' },
-    { header: 'Acceptable', condition: 'Deep Scratches', deductionPercentage: 0, image: '' },
+      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
+      { header: 'Good', condition: 'Some visible signs of usage, but no scuffs or dents', deductionPercentage: 0},
+      { header: 'Fair', condition: 'Visible scratches, 1 - 2 minor scuffs or dents', deductionPercentage: 0 },
+      { header: 'Acceptable', condition: 'Too many scratches, noticeable scuffs or dents', deductionPercentage: 0 },
 ];
 
 const defaultFaults = [

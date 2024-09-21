@@ -102,17 +102,17 @@ router.post('/', upload.any(), async (req, res) => {
     ];
 
     const defaultFrontScreen = [
-      { header: 'Excellent', condition: 'Minimal Scratches', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/b5quxe8mxu91r78ezgn2' },
-      { header: 'Good', condition: 'Few Scratches', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/iwwtuvg2au8briwxjk0f' },
-      { header: 'Fair', condition: 'Visible Scratches', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/ry9g4aeoylpmqxmpdadx' },
-      { header: 'Acceptable', condition: 'Deep Scratches', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/o7e92ahonlj1k76b1kjx' },
+      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
+      { header: 'Good', condition: 'Some visible signs of usage, but no deep scratches', deductionPercentage: 0},
+      { header: 'Fair', condition: 'Visible scratches, swirls, 1 - 2 minor deep scratches', deductionPercentage: 0 },
+      { header: 'Acceptable', condition: 'Too many scratches, swirls, noticeable deep scratches', deductionPercentage: 0 },
     ];
 
     const defaultBody = [
-      { header: 'Excellent', condition: 'Minimal Scratches', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/b5quxe8mxu91r78ezgn2' },
-      { header: 'Good', condition: 'Few Scratches', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/iwwtuvg2au8briwxjk0f' },
-      { header: 'Fair', condition: 'Visible Scratches', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/ry9g4aeoylpmqxmpdadx' },
-      { header: 'Acceptable', condition: 'Deep Scratches', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/o7e92ahonlj1k76b1kjx' },
+      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
+      { header: 'Good', condition: 'Some visible signs of usage, but no scuffs or dents', deductionPercentage: 0},
+      { header: 'Fair', condition: 'Visible scratches, 1 - 2 minor scuffs or dents', deductionPercentage: 0 },
+      { header: 'Acceptable', condition: 'Too many scratches, noticeable scuffs or dents', deductionPercentage: 0 },
     ];
 
     const defaultAccessories = [
