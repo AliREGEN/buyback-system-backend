@@ -2,6 +2,7 @@ const express = require('express');
 const connectDB = require('./config/db');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const compression = require('compression');
 
 dotenv.config();
 
@@ -9,6 +10,9 @@ dotenv.config();
 connectDB();
 
 const app = express();
+
+// Enable GZIP compression
+app.use(compression());
 
 // Init Middleware
 app.use(cors());
