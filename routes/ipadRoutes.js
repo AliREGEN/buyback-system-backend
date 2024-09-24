@@ -54,13 +54,29 @@ router.post('/', upload.any(), async (req, res) => {
             }));
         }
 
-    const defaultBatteryHealth = [
-        { health: '95% or Above', deductionPercentage: 0 },
-        { health: '90% or Above', deductionPercentage: 0 },
-        { health: '85% or Above', deductionPercentage: 0 },
-        { health: '80% or Above', deductionPercentage: 0 },
-        { health: 'Less than 80%', deductionPercentage: 0 },
-        ];
+
+    // Filter battery health based on iPad modelName
+const filterBatteryHealthOptionsForiPads = (modelName) => {
+  const allOptions = [
+    { health: '95% or Above', deductionPercentage: 0 },
+    { health: '90% or Above', deductionPercentage: 0 },
+    { health: '85% or Above', deductionPercentage: 0 },
+    { health: '80% or Above', deductionPercentage: 0 },
+    { health: 'Less than 80%', deductionPercentage: 0 },
+  ];
+
+  if (['iPad - 10th Generation (2022)', 'iPad Air - 5th Generation (2022)', 'iPad Pro 11-inch - 4th Generation (2022)'].includes(modelName)) {
+    return allOptions.filter((option) => ['95% or Above', '90% or Above', '85% or Above'].includes(option.health));
+  } else if (['iPad - 9th Generation (2021)', 'iPad mini - 6th Generation (2021)', 'iPad Pro 12.9-inch - 5th Generation (2021)'].includes(modelName)) {
+    return allOptions.filter((option) => ['90% or Above', '85% or Above', '80% or Above'].includes(option.health));
+  } else {
+    return allOptions.filter((option) => ['85% or Above', '80% or Above', 'Less than 80%'].includes(option.health));
+  }
+};
+
+// Apply the filtered battery health options based on the iPad model name
+const iPadBatteryHealthOptions = filterBatteryHealthOptionsForiPads(modelName);
+
 
     const defaultCosmeticIssues = [
       { header: 'Damaged Display', condition: 'Cracked/Shattered', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/w5gsvgwfpkzpsx6k4an9' },
@@ -153,7 +169,7 @@ router.post('/', upload.any(), async (req, res) => {
             deductionPercentage: 0,
         })),
         paymentOptions: paymentOptionsArray,
-        batteryHealth: defaultBatteryHealth,
+        batteryHealth: iPadBatteryHealthOptions,
         cosmeticIssues: defaultCosmeticIssues,
         faults: defaultFaults,
         repairs: defaultRepairs,

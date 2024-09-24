@@ -67,13 +67,28 @@ router.post('/', upload.any(), async (req, res) => {
 
 
     // Default options
-const defaultBatteryHealth = [
-  { health: '95% or Above', deductionPercentage: 0 },
-  { health: '90% or Above', deductionPercentage: 0 },
-  { health: '85% or Above', deductionPercentage: 0 },
-  { health: '80% or Above', deductionPercentage: 0 },
-  { health: 'Less than 80%', deductionPercentage: 0 },
-];
+    // Filter battery health based on Apple Watch modelName
+const filterBatteryHealthOptionsForWatches = (modelName) => {
+  const allOptions = [
+    { health: '95% or Above', deductionPercentage: 0 },
+    { health: '90% or Above', deductionPercentage: 0 },
+    { health: '85% or Above', deductionPercentage: 0 },
+    { health: '80% or Above', deductionPercentage: 0 },
+    { health: 'Less than 80%', deductionPercentage: 0 },
+  ];
+
+  if (['Apple Watch Ultra 2 (2023)', 'Apple Watch Series 9 (2023)', 'Apple Watch Ultra (2022)'].includes(modelName)) {
+    return allOptions.filter((option) => ['95% or Above', '90% or Above', '85% or Above'].includes(option.health));
+  } else if (['Apple Watch Series 7 (2021)', 'Apple Watch Series 8 (2022)'].includes(modelName)) {
+    return allOptions.filter((option) => ['90% or Above', '85% or Above', '80% or Above'].includes(option.health));
+  } else {
+    return allOptions.filter((option) => ['85% or Above', '80% or Above', 'Less than 80%'].includes(option.health));
+  }
+};
+
+// Apply the filtered battery health options based on the Watch model name
+const watchBatteryHealthOptions = filterBatteryHealthOptionsForWatches(modelName);
+
 
 const defaultCosmeticIssues = [
   { header: 'Damaged Display', condition: 'Cracked/Shattered', deductionPercentage: 0, image: '' },
@@ -149,7 +164,7 @@ const watchCaseTypeArray = watchCaseType
       watchCaseSize: watchCaseSizeFormatted,
       strapCondition: defaultStrapCondition,
       cosmeticIssues: defaultCosmeticIssues,
-      batteryHealth: defaultBatteryHealth,
+      batteryHealth: watchBatteryHealthOptions,
       bandsType: defaultBandsType,
       faults: defaultFaults,
       repairs: defaultRepairs,

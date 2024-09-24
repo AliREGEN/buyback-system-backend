@@ -63,13 +63,28 @@ router.post('/', upload.any(), async (req, res) => {
       }));
     }
 
-    const defaultBatteryHealth = [
-        { health: '95% or Above', deductionPercentage: 0 },
-        { health: '90% or Above', deductionPercentage: 0 },
-        { health: '85% or Above', deductionPercentage: 0 },
-        { health: '80% or Above', deductionPercentage: 0 },
-        { health: 'Less than 80%', deductionPercentage: 0 },
-      ];
+    // Filter battery health based on MacBook modelName
+const filterBatteryHealthOptionsForMacBooks = (modelName) => {
+  const allOptions = [
+    { health: '95% or Above', deductionPercentage: 0 },
+    { health: '90% or Above', deductionPercentage: 0 },
+    { health: '85% or Above', deductionPercentage: 0 },
+    { health: '80% or Above', deductionPercentage: 0 },
+    { health: 'Less than 80%', deductionPercentage: 0 },
+  ];
+
+  if (['MacBook Pro 14-inch (2023)', 'MacBook Pro 16-inch (2023)', 'MacBook Air (2022)'].includes(modelName)) {
+    return allOptions.filter((option) => ['95% or Above', '90% or Above', '85% or Above'].includes(option.health));
+  } else if (['MacBook Air (2020)', 'MacBook Pro 13-inch (2020)'].includes(modelName)) {
+    return allOptions.filter((option) => ['90% or Above', '85% or Above', '80% or Above'].includes(option.health));
+  } else {
+    return allOptions.filter((option) => ['85% or Above', '80% or Above', 'Less than 80%'].includes(option.health));
+  }
+};
+
+// Apply the filtered battery health options based on the MacBook model name
+const macBookBatteryHealthOptions = filterBatteryHealthOptionsForMacBooks(modelName);
+
 
 
     const defaultCosmeticIssues = [
@@ -144,7 +159,7 @@ router.post('/', upload.any(), async (req, res) => {
         speed: processor.speed || '',
         deductionPercentage: processor.deductionPercentage || 0,
       })),
-      batteryHealth: defaultBatteryHealth,
+      batteryHealth: macBookBatteryHealthOptions,
       cosmeticIssues: defaultCosmeticIssues,
       faults: defaultFaults,
       repairs: defaultRepairs,
