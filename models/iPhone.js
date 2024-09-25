@@ -60,6 +60,11 @@ const PTASchema = new mongoose.Schema({
   deductionPercentage: { type: Number, default: 0 },
 });
 
+const UnknownPartSchema = new mongoose.Schema({
+  option: { type: String, required: true },
+  deductionPercentage: { type: Number, default: 0 },
+});
+
 const AccessoriesSchema = new mongoose.Schema({
   option: { type: String, required: true, enum: ['Everything (Complete Box)', 'Box Only', 'iPhone Only'] },
   deductionPercentage: { type: Number, default: 0 },
@@ -97,6 +102,7 @@ const iPhoneSchema = new mongoose.Schema({
   simVariant: { type: [SIMVariantSchema], default: undefined },
   pta: { type: [PTASchema], default: undefined },
   accessories: { type: [AccessoriesSchema], default: undefined },
+  unknownPart: { type: [UnknownPartSchema], default: undefined },
 });
 
 module.exports = mongoose.model('iPhone', iPhoneSchema);

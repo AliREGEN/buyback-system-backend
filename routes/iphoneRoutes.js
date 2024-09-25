@@ -89,6 +89,10 @@ router.post('/', upload.any(), async (req, res) => {
     const paymentOptionsArray = Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]');
     console.log('Payment Options Array: ', paymentOptionsArray);
 
+    const defaultUnknownPart = [
+      { option: 'Is there any unknown part message on your phone?', deductionPercentage: 0 }
+    ];
+
 
     const defaultFaults = [
       { header: 'Faulty Display', condition: 'Dead Pixels/Spots/Lines', deductionPercentage: 0},
@@ -118,7 +122,6 @@ router.post('/', upload.any(), async (req, res) => {
       { repair: 'Battery Replaced', deductionPercentage: 0 },
       { repair: 'Battery Replaced by REGEN', deductionPercentage: 0 },
       { repair: 'Motherboard Repaired', deductionPercentage: 0 },
-      
       { repair: 'Other Repairs', deductionPercentage: 0 }
     ];
 
@@ -182,6 +185,7 @@ router.post('/', upload.any(), async (req, res) => {
       simVariant: defaultSIMVariant,
       pta: defaultPTA,
       accessories: defaultAccessories,
+      unknownPart: defaultUnknownPart
     });
 
     await newiPhone.save();
@@ -214,7 +218,8 @@ router.put('/:id', upload.any(), async (req, res) => {
       simVariant,
       pta,
       accessories,
-      colors // Colors as comma-separated string
+      colors, // Colors as comma-separated string
+      unknownPart,
     } = req.body;
 
     const existingIPhone = await iPhone.findById(req.params.id);
@@ -288,6 +293,7 @@ router.put('/:id', upload.any(), async (req, res) => {
         deductionPercentage: item.deductionPercentage || 0,
       }));
     }
+  
 
     // Update cosmetic issues
     if (Array.isArray(cosmeticIssues)) {
@@ -359,6 +365,14 @@ router.put('/:id', upload.any(), async (req, res) => {
     // Update PTA
     if (Array.isArray(pta)) {
       existingIPhone.pta = pta.map(item => ({
+        option: item.option,
+        deductionPercentage: item.deductionPercentage || 0,
+      }));
+    }
+
+    // Update unknown part
+    if (Array.isArray(unknownPart)) {
+      existingIPhone.unknownPart = unknownPart.map(item => ({
         option: item.option,
         deductionPercentage: item.deductionPercentage || 0,
       }));

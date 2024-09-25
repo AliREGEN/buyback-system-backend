@@ -6,6 +6,11 @@ const PtaOptionSchema = new mongoose.Schema({
   deductionPercentage: { type: Number, required: true },
 });
 
+const UnknownPartSchema = new mongoose.Schema({
+  value: { type: String, required: true },
+  deductionPercentage: { type: Number, required: true },
+});
+
 const RepairOptionSchema = new mongoose.Schema({
   repair: { type: String, required: true },
   // Removed unknownPart from here
@@ -75,10 +80,10 @@ const InspectionSchema = new mongoose.Schema({
   side: { type: String },
   body: { type: String },
   pta: { type: Map, of: PtaOptionSchema },
+  unknownPart: { type: Map, of: UnknownPartSchema },
   accessories: { type: String },
   applePencil: { type: [ApplePencilSchema], default: undefined },
   paymentOption: { type: PaymentOptionSchema, required: true },
-  unknownPart: { type: String, enum: ['Yes', 'No'], default: null }, // Added globally
   // Customer details
   fullName: { type: String, required: true },
   whatsapp: { type: String, required: true },
