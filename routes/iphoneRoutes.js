@@ -80,10 +80,10 @@ router.post('/', upload.any(), async (req, res) => {
     const batteryHealthOptions = filterBatteryHealthOptions(modelName);
 
     const defaultCosmeticIssues = [
-      { header: 'Damaged Display', condition: 'Cracked/Shattered', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/w5gsvgwfpkzpsx6k4an9' },
-      { header: 'Damaged Back', condition: 'Cracked/Shattered', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/mcoj9bvjccs3k3sbs0zo' },
-      { header: 'Damaged Camera Lens', condition: 'Cracked/Shattered', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/c_crop,g_auto,h_800,w_800/static/ytdbzp9swiq1ndj1ax9b.jpg' },
-      { header: 'Damaged Frame', condition: 'Broken/Bent', deductionPercentage: 0, image: '' }
+      { header: 'Damaged Display', condition: 'Front glass is cracked or shattered', deductionPercentage: 0 },
+      { header: 'Damaged Back', condition: 'Back glass is cracked or shattered', deductionPercentage: 0 },
+      { header: 'Damaged Camera Lens', condition: 'Camera lens is cracked or shattered', deductionPercentage: 0 },
+      { header: 'Damaged Frame', condition: 'Phone body is cracked/bent or broken', deductionPercentage: 0 }
     ];
 
     const paymentOptionsArray = Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]');
@@ -91,34 +91,35 @@ router.post('/', upload.any(), async (req, res) => {
 
 
     const defaultFaults = [
-      { header: 'Faulty Display', condition: 'Dead Pixels/Spots/Lines', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/xypgkalx2bsb4fqvtrkx' },
-      { header: 'Faulty Earpiece', condition: 'No Audio/Noisy Audio', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/a0wdieodeqzxalb2xxya' },
-      { header: 'Faulty Face ID', condition: 'Face ID Not Working', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/q5cdb1z1grb3vlrjiwsl' },
-      { header: 'Faulty Proximity Sensor', condition: 'Display remains on during calls', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/w3ry2bfylnftkdobvarn' },
-      { header: 'Faulty Vibration Motor', condition: 'No Vibration/Rattling Noise', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/hq7xci8sagfzbqapna7s' },
-      { header: 'Faulty Power Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/qegdoyic1egs01excx4e' },
-      { header: 'Faulty Volume Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/lfdt40jugoidunjxnjy9' },
-      { header: 'Faulty Mute Switch', condition: 'Not Working/Not Switching', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/edscriyysymzpv6evh7a' },
-      { header: 'Faulty Front Camera', condition: 'Dead/Blurry', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/jwlkbufksie0mytrr5t0' },
-      { header: 'Faulty Rear Camera', condition: 'Dead/Blurry', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/ctbjdrjqcvunarmnvnrp' },
-      { header: 'Faulty Flash', condition: 'Dead/Not Working', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/aweyxzb851kd4gvydke9' },
-      { header: 'Faulty Microphone', condition: 'Not Working/Noisy', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/in2l4j5z8ibaiygm18ea' },
-      { header: 'Faulty Loudspeaker', condition: 'No Audio/Noisy Audio', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/mfcoz9abwcemw8hlkoci' },
-      { header: 'Faulty Charging Port', condition: 'Dead/Not Working', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/t5rehbtdmceufmpufgom' },
+      { header: 'Faulty Display', condition: 'Dead Pixels/Spots/Lines', deductionPercentage: 0},
+      { header: 'Faulty Earpiece', condition: 'No Audio/Noisy Audio during phone calls', deductionPercentage: 0 },
+      { header: 'Faulty Face ID', condition: 'Face ID is not working or not working consistently', deductionPercentage: 0 },
+      { header: 'Faulty Proximity Sensor', condition: 'Display remains on during calls', deductionPercentage: 0 },
+      { header: 'Faulty Vibration Motor', condition: 'No Vibration/Rattling Noise', deductionPercentage: 0 },
+      { header: 'Faulty Power Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
+      { header: 'Faulty Volume Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
+      { header: 'Faulty Mute Switch', condition: 'Not Working/Not Switching', deductionPercentage: 0 },
+      { header: 'Faulty Front Camera', condition: 'Front Camera does not work, or the image is blurry', deductionPercentage: 0 },
+      { header: 'Faulty Rear Camera', condition: 'Rear Camera does not work, or the image is blurry', deductionPercentage: 0 },
+      { header: 'Faulty Flash', condition: 'Dead/Not Working', deductionPercentage: 0 },
+      { header: 'Faulty Microphone', condition: 'Not Working/Noisy', deductionPercentage: 0 },
+      { header: 'Faulty Loudspeaker', condition: 'No Audio/Noisy Audio', deductionPercentage: 0 },
+      { header: 'Faulty Charging Port', condition: 'Dead/Not Working', deductionPercentage: 0 },
     ];
 
     const defaultRepairs = [
-      { repair: 'Touch Screen Replaced', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/vdclrkhcxzopuciv3tjr' },
-      { repair: 'Display Replaced', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/tfawle3cdpflyta3lnlg' },
-      { repair: 'Front Camera Replaced', deductionPercentage: 0, image: '' },
-      { repair: 'Back Camera Replaced', deductionPercentage: 0, image: '' },
-      { repair: 'Loudspeaker Replaced', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/gf4xtvvrfag3kfy8diry' },
-      { repair: 'Earpiece Replaced', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/vw9pjhxb82fk2zw0sdyo' },
-      { repair: 'Microphone Replaced', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/hhs9zk7179ylqzusdi4p' },
-      { repair: 'Battery Replaced', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/vqw9yzwqlchs7ils53qs' },
-      { repair: 'Battery Replaced by REGEN', deductionPercentage: 0, image: 'https://res.cloudinary.com/dl1kjmaoq/image/upload/f_auto,q_auto/v1/static/vqw9yzwqlchs7ils53qs' },
-      { repair: 'Motherboard Repaired', deductionPercentage: 0, image: '' },
-      { repair: 'Other Repairs', deductionPercentage: 0, image: '' }
+      { repair: 'Touch Screen Replaced', deductionPercentage: 0 },
+      { repair: 'Display Replaced', deductionPercentage: 0 },
+      { repair: 'Front Camera Replaced', deductionPercentage: 0 },
+      { repair: 'Back Camera Replaced', deductionPercentage: 0 },
+      { repair: 'Loudspeaker Replaced', deductionPercentage: 0 },
+      { repair: 'Earpiece Replaced', deductionPercentage: 0 },
+      { repair: 'Microphone Replaced', deductionPercentage: 0 },
+      { repair: 'Battery Replaced', deductionPercentage: 0 },
+      { repair: 'Battery Replaced by REGEN', deductionPercentage: 0 },
+      { repair: 'Motherboard Repaired', deductionPercentage: 0 },
+      
+      { repair: 'Other Repairs', deductionPercentage: 0 }
     ];
 
     const defaultFrontScreen = [

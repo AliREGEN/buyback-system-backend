@@ -7,7 +7,8 @@ const PtaOptionSchema = new mongoose.Schema({
 });
 
 const RepairOptionSchema = new mongoose.Schema({
-  repair: { type: String, required: true }, 
+  repair: { type: String, required: true },
+  // Removed unknownPart from here
 });
 
 const CosmeticIssueSchema = new mongoose.Schema({
@@ -63,7 +64,7 @@ const InspectionSchema = new mongoose.Schema({
   simOption: { type: String },
   connectivity: { type: String },
   batteryHealth: { type: String },
-  isFunctional: { type: String },
+  isFaulty: { type: String },
   faults: { type: [FaultOptionSchema] },
   isRepaired: { type: String },
   repair: { type: [RepairOptionSchema] },
@@ -77,6 +78,7 @@ const InspectionSchema = new mongoose.Schema({
   accessories: { type: String },
   applePencil: { type: [ApplePencilSchema], default: undefined },
   paymentOption: { type: PaymentOptionSchema, required: true },
+  unknownPart: { type: String, enum: ['Yes', 'No'], default: null }, // Added globally
   // Customer details
   fullName: { type: String, required: true },
   whatsapp: { type: String, required: true },

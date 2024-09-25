@@ -4,7 +4,6 @@ const router = express.Router();
 const Inspection = require('../models/Inspection');
 
 // Route to create a new inspection
-// Route to create a new inspection
 router.post('/', async (req, res) => {
   try {
     const {
@@ -24,7 +23,7 @@ router.post('/', async (req, res) => {
       processorType,
       connectivity,
       batteryHealth,
-      isFunctional,
+      isFaulty,
       isRepaired,
       isDamaged,
       faults,
@@ -38,6 +37,7 @@ router.post('/', async (req, res) => {
       accessories,
       applePencil,
       paymentOption,
+      unknownPart,  // Moved to a global level
       // Customer details
       fullName,
       whatsapp,
@@ -76,7 +76,7 @@ router.post('/', async (req, res) => {
       processorType: newProcessorType,
       connectivity,
       batteryHealth,
-      isFunctional,
+      isFaulty,
       isRepaired,
       isDamaged,
       faults: faults.map(fault => ({
@@ -86,6 +86,7 @@ router.post('/', async (req, res) => {
       repair: repair.map(repairItem => ({
         repair: repairItem.repair,
       })),
+      unknownPart, // Storing unknownPart as a global field
       cosmeticIssues: cosmeticIssues.map(issue => ({
         header: issue.header,
         value: issue.description,
@@ -150,7 +151,6 @@ router.get('/get-ip-location', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch IP and location.' });
   }
 });
-
 
 // Route to get all inspections
 router.get('/', async (req, res) => {
