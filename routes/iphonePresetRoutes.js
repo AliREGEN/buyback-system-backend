@@ -17,16 +17,15 @@ router.post('/', async (req, res) => {
       modelName,
       vendor,
       deviceType,
-      batteryHealth,
       cosmeticIssues,
       faults,
       repairs,
       frontScreen,
       back,
       side,
-      simVariant,
       pta,
-      accessories
+      accessories,
+      unknownPart,
     });
 
     await newPreset.save();

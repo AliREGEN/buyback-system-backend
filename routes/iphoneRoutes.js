@@ -198,8 +198,8 @@ router.post('/', upload.any(), async (req, res) => {
 });
 
 
-// Update iPhone fields
-router.put('/:id', upload.any(), async (req, res) => {
+// update route for device management
+router.put('/:id/device-management', upload.any(), async (req, res) => {
   try {
     const {
       vendor,
@@ -231,11 +231,130 @@ router.put('/:id', upload.any(), async (req, res) => {
     console.log('Received Body:', req.body);
     console.log('Received Files:', req.files);
 
+     // Filter battery health based on modelName
+    const filterBatteryHealthOptions = (modelName) => {
+      const allOptions = [
+        { health: '95% or Above', deductionPercentage: 0 },
+        { health: '90% or Above', deductionPercentage: 0 },
+        { health: '85% or Above', deductionPercentage: 0 },
+        { health: '80% or Above', deductionPercentage: 0 },
+        { health: 'Less than 80%', deductionPercentage: 0 },
+      ];
+
+      if (['iPhone 15 Pro Max', 'iPhone 15 Pro', 'iPhone 15 Plus', 'iPhone 15'].includes(modelName)) {
+        return allOptions.filter((option) => ['95% or Above', '90% or Above', '85% or Above'].includes(option.health));
+      } else if (['iPhone 14 Pro Max', 'iPhone 14 Pro', 'iPhone 14 Plus', 'iPhone 14'].includes(modelName)) {
+        return allOptions.filter((option) => ['90% or Above', '85% or Above', '80% or Above'].includes(option.health));
+      } else {
+        return allOptions.filter((option) => ['85% or Above', '80% or Above', 'Less than 80%'].includes(option.health));
+      }
+    };
+
+    // Apply the filtered battery health options based on the model name
+    const batteryHealthOptions = filterBatteryHealthOptions(modelName);
+
+    const defaultCosmeticIssues = [
+      { header: 'Damaged Display', condition: 'Front glass is cracked or shattered', deductionPercentage: 0 },
+      { header: 'Damaged Back', condition: 'Back glass is cracked or shattered', deductionPercentage: 0 },
+      { header: 'Damaged Camera Lens', condition: 'Camera lens is cracked or shattered', deductionPercentage: 0 },
+      { header: 'Damaged Frame', condition: 'Phone body is cracked/bent or broken', deductionPercentage: 0 }
+    ];
+
+    const defaultUnknownPart = [
+      { option: 'Is there any unknown part message on your phone?', deductionPercentage: 0 }
+    ];
+
+
+    const defaultFaults = [
+      { header: 'Faulty Display', condition: 'Dead Pixels/Spots/Lines', deductionPercentage: 0},
+      { header: 'Faulty Earpiece', condition: 'No Audio/Noisy Audio during phone calls', deductionPercentage: 0 },
+      { header: 'Faulty Face ID', condition: 'Face ID is not working or not working consistently', deductionPercentage: 0 },
+      { header: 'Faulty Proximity Sensor', condition: 'Display remains on during calls', deductionPercentage: 0 },
+      { header: 'Faulty Vibration Motor', condition: 'No Vibration/Rattling Noise', deductionPercentage: 0 },
+      { header: 'Faulty Power Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
+      { header: 'Faulty Volume Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
+      { header: 'Faulty Mute Switch', condition: 'Not Working/Not Switching', deductionPercentage: 0 },
+      { header: 'Faulty Front Camera', condition: 'Front Camera does not work, or the image is blurry', deductionPercentage: 0 },
+      { header: 'Faulty Rear Camera', condition: 'Rear Camera does not work, or the image is blurry', deductionPercentage: 0 },
+      { header: 'Faulty Flash', condition: 'Dead/Not Working', deductionPercentage: 0 },
+      { header: 'Faulty Microphone', condition: 'Not Working/Noisy', deductionPercentage: 0 },
+      { header: 'Faulty Loudspeaker', condition: 'No Audio/Noisy Audio', deductionPercentage: 0 },
+      { header: 'Faulty Charging Port', condition: 'Dead/Not Working', deductionPercentage: 0 },
+    ];
+
+    const defaultRepairs = [
+      { repair: 'Touch Screen Replaced', deductionPercentage: 0 },
+      { repair: 'Display Replaced', deductionPercentage: 0 },
+      { repair: 'Front Camera Replaced', deductionPercentage: 0 },
+      { repair: 'Back Camera Replaced', deductionPercentage: 0 },
+      { repair: 'Loudspeaker Replaced', deductionPercentage: 0 },
+      { repair: 'Earpiece Replaced', deductionPercentage: 0 },
+      { repair: 'Microphone Replaced', deductionPercentage: 0 },
+      { repair: 'Battery Replaced', deductionPercentage: 0 },
+      { repair: 'Battery Replaced by REGEN', deductionPercentage: 0 },
+      { repair: 'Motherboard Repaired', deductionPercentage: 0 },
+      { repair: 'Other Repairs', deductionPercentage: 0 }
+    ];
+
+    const defaultFrontScreen = [
+      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
+      { header: 'Good', condition: 'Some visible signs of usage, but no deep scratches', deductionPercentage: 0},
+      { header: 'Fair', condition: 'Visible scratches, swirls, 1 - 2 minor deep scratches', deductionPercentage: 0 },
+      { header: 'Acceptable', condition: 'Too many scratches, swirls, noticeable deep scratches', deductionPercentage: 0 },
+    ];
+
+    const defaultBack = [
+      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
+      { header: 'Good', condition: 'Some visible signs of usage, but no deep scratches', deductionPercentage: 0},
+      { header: 'Fair', condition: 'Visible scratches, swirls, 1 - 2 minor deep scratches', deductionPercentage: 0 },
+      { header: 'Acceptable', condition: 'Too many scratches, swirls, noticeable deep scratches', deductionPercentage: 0 },
+    ];
+
+    const defaultSide = [
+      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
+      { header: 'Good', condition: 'Some visible signs of usage, but no scuffs or dents', deductionPercentage: 0},
+      { header: 'Fair', condition: 'Visible scratches, 1 - 2 minor scuffs or dents', deductionPercentage: 0 },
+      { header: 'Acceptable', condition: 'Too many scratches, noticeable scuffs or dents', deductionPercentage: 0 },
+    ];
+
+    const defaultSIMVariant = [
+      { option: 'Dual eSIM', deductionPercentage: 0 },
+      { option: 'Dual Physical SIM', deductionPercentage: 0 },
+      { option: 'eSIM + Physical SIM', deductionPercentage: 0 }
+    ];
+
+    const defaultPTA = [
+      { option: 'Is Your iPhone PTA Approved?', deductionPercentage: 0 },
+      { option: 'Is Your iPhone Factory Unlocked?', deductionPercentage: 0 }
+    ];
+
+    const defaultAccessories = [
+      { option: 'Everything (Complete Box)', deductionPercentage: 0, image: '' },
+      { option: 'Box Only', deductionPercentage: 0, image: '' },
+      { option: 'iPhone Only', deductionPercentage: 0, image: '' }
+    ];
+
+
     // Update basic fields
     if (vendor) existingIPhone.vendor = vendor;
     if (deviceType) existingIPhone.deviceType = deviceType;
     if (modelName) existingIPhone.modelName = modelName;
     if (maxPrice) existingIPhone.maxPrice = maxPrice;
+
+        const updateDeductionsIfZero = (existing, incoming, defaults) => {
+      // If incoming data is missing, use defaults
+      if (!incoming || !Array.isArray(incoming)) return defaults;
+
+      // If the incoming data exists, but is missing key fields (like header/condition), replace them
+      return incoming.map((item, index) => {
+        const defaultItem = defaults[index] || {};
+        return {
+          ...defaultItem, // Use defaults as base
+          ...item, // Override with incoming data if exists
+          deductionPercentage: item.deductionPercentage || (existing[index]?.deductionPercentage || 0),
+        };
+      });
+    };
 
 
     // Handle colors and image uploads
@@ -387,6 +506,18 @@ router.put('/:id', upload.any(), async (req, res) => {
       }));
     }
 
+    existingIPhone.batteryHealth = updateDeductionsIfZero(existingIPhone.batteryHealth, batteryHealth, batteryHealthOptions);
+    existingIPhone.cosmeticIssues = updateDeductionsIfZero(existingIPhone.cosmeticIssues, cosmeticIssues, defaultCosmeticIssues);
+    existingIPhone.faults = updateDeductionsIfZero(existingIPhone.faults, faults, defaultFaults);
+    existingIPhone.repairs = updateDeductionsIfZero(existingIPhone.repairs, repairs, defaultRepairs);
+    existingIPhone.frontScreen = updateDeductionsIfZero(existingIPhone.frontScreen, frontScreen, defaultFrontScreen);
+    existingIPhone.back = updateDeductionsIfZero(existingIPhone.back, back, defaultBack);
+    existingIPhone.side = updateDeductionsIfZero(existingIPhone.side, side, defaultSide);
+    existingIPhone.simVariant = updateDeductionsIfZero(existingIPhone.simVariant, simVariant, defaultSIMVariant);
+    existingIPhone.pta = updateDeductionsIfZero(existingIPhone.pta, pta, defaultPTA);
+    existingIPhone.unknownPart = updateDeductionsIfZero(existingIPhone.unknownPart, unknownPart, defaultUnknownPart);
+    existingIPhone.accessories = updateDeductionsIfZero(existingIPhone.accessories, accessories, defaultAccessories);
+
     // Save updated iPhone document
     const updatedIPhone = await existingIPhone.save();
 
@@ -397,7 +528,343 @@ router.put('/:id', upload.any(), async (req, res) => {
   }
 });
 
+// Update iPhone fields details only.
+router.put('/:id/device-details', upload.any(), async (req, res) => {
+  try {
+    const {
+      vendor,
+      deviceType,
+      modelName,
+      maxPrice,
+      storageSizes,
+      paymentOptions,
+      batteryHealth,
+      cosmeticIssues,
+      faults,
+      repairs,
+      frontScreen,
+      back,
+      side,
+      simVariant,
+      pta,
+      accessories,
+      colors, // Colors as comma-separated string
+      unknownPart,
+    } = req.body;
 
+    const existingIPhone = await iPhone.findById(req.params.id);
+    if (!existingIPhone) {
+      return res.status(404).json({ message: 'iPhone not found' });
+    }
+
+    // Logging received body and files for debugging
+    console.log('Received Body:', req.body);
+    console.log('Received Files:', req.files);
+
+     // Filter battery health based on modelName
+    const filterBatteryHealthOptions = (modelName) => {
+      const allOptions = [
+        { health: '95% or Above', deductionPercentage: 0 },
+        { health: '90% or Above', deductionPercentage: 0 },
+        { health: '85% or Above', deductionPercentage: 0 },
+        { health: '80% or Above', deductionPercentage: 0 },
+        { health: 'Less than 80%', deductionPercentage: 0 },
+      ];
+
+      if (['iPhone 15 Pro Max', 'iPhone 15 Pro', 'iPhone 15 Plus', 'iPhone 15'].includes(modelName)) {
+        return allOptions.filter((option) => ['95% or Above', '90% or Above', '85% or Above'].includes(option.health));
+      } else if (['iPhone 14 Pro Max', 'iPhone 14 Pro', 'iPhone 14 Plus', 'iPhone 14'].includes(modelName)) {
+        return allOptions.filter((option) => ['90% or Above', '85% or Above', '80% or Above'].includes(option.health));
+      } else {
+        return allOptions.filter((option) => ['85% or Above', '80% or Above', 'Less than 80%'].includes(option.health));
+      }
+    };
+
+    // Apply the filtered battery health options based on the model name
+    const batteryHealthOptions = filterBatteryHealthOptions(modelName);
+
+    const defaultCosmeticIssues = [
+      { header: 'Damaged Display', condition: 'Front glass is cracked or shattered', deductionPercentage: 0 },
+      { header: 'Damaged Back', condition: 'Back glass is cracked or shattered', deductionPercentage: 0 },
+      { header: 'Damaged Camera Lens', condition: 'Camera lens is cracked or shattered', deductionPercentage: 0 },
+      { header: 'Damaged Frame', condition: 'Phone body is cracked/bent or broken', deductionPercentage: 0 }
+    ];
+
+    const defaultUnknownPart = [
+      { option: 'Is there any unknown part message on your phone?', deductionPercentage: 0 }
+    ];
+
+
+    const defaultFaults = [
+      { header: 'Faulty Display', condition: 'Dead Pixels/Spots/Lines', deductionPercentage: 0},
+      { header: 'Faulty Earpiece', condition: 'No Audio/Noisy Audio during phone calls', deductionPercentage: 0 },
+      { header: 'Faulty Face ID', condition: 'Face ID is not working or not working consistently', deductionPercentage: 0 },
+      { header: 'Faulty Proximity Sensor', condition: 'Display remains on during calls', deductionPercentage: 0 },
+      { header: 'Faulty Vibration Motor', condition: 'No Vibration/Rattling Noise', deductionPercentage: 0 },
+      { header: 'Faulty Power Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
+      { header: 'Faulty Volume Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
+      { header: 'Faulty Mute Switch', condition: 'Not Working/Not Switching', deductionPercentage: 0 },
+      { header: 'Faulty Front Camera', condition: 'Front Camera does not work, or the image is blurry', deductionPercentage: 0 },
+      { header: 'Faulty Rear Camera', condition: 'Rear Camera does not work, or the image is blurry', deductionPercentage: 0 },
+      { header: 'Faulty Flash', condition: 'Dead/Not Working', deductionPercentage: 0 },
+      { header: 'Faulty Microphone', condition: 'Not Working/Noisy', deductionPercentage: 0 },
+      { header: 'Faulty Loudspeaker', condition: 'No Audio/Noisy Audio', deductionPercentage: 0 },
+      { header: 'Faulty Charging Port', condition: 'Dead/Not Working', deductionPercentage: 0 },
+    ];
+
+    const defaultRepairs = [
+      { repair: 'Touch Screen Replaced', deductionPercentage: 0 },
+      { repair: 'Display Replaced', deductionPercentage: 0 },
+      { repair: 'Front Camera Replaced', deductionPercentage: 0 },
+      { repair: 'Back Camera Replaced', deductionPercentage: 0 },
+      { repair: 'Loudspeaker Replaced', deductionPercentage: 0 },
+      { repair: 'Earpiece Replaced', deductionPercentage: 0 },
+      { repair: 'Microphone Replaced', deductionPercentage: 0 },
+      { repair: 'Battery Replaced', deductionPercentage: 0 },
+      { repair: 'Battery Replaced by REGEN', deductionPercentage: 0 },
+      { repair: 'Motherboard Repaired', deductionPercentage: 0 },
+      { repair: 'Other Repairs', deductionPercentage: 0 }
+    ];
+
+    const defaultFrontScreen = [
+      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
+      { header: 'Good', condition: 'Some visible signs of usage, but no deep scratches', deductionPercentage: 0},
+      { header: 'Fair', condition: 'Visible scratches, swirls, 1 - 2 minor deep scratches', deductionPercentage: 0 },
+      { header: 'Acceptable', condition: 'Too many scratches, swirls, noticeable deep scratches', deductionPercentage: 0 },
+    ];
+
+    const defaultBack = [
+      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
+      { header: 'Good', condition: 'Some visible signs of usage, but no deep scratches', deductionPercentage: 0},
+      { header: 'Fair', condition: 'Visible scratches, swirls, 1 - 2 minor deep scratches', deductionPercentage: 0 },
+      { header: 'Acceptable', condition: 'Too many scratches, swirls, noticeable deep scratches', deductionPercentage: 0 },
+    ];
+
+    const defaultSide = [
+      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
+      { header: 'Good', condition: 'Some visible signs of usage, but no scuffs or dents', deductionPercentage: 0},
+      { header: 'Fair', condition: 'Visible scratches, 1 - 2 minor scuffs or dents', deductionPercentage: 0 },
+      { header: 'Acceptable', condition: 'Too many scratches, noticeable scuffs or dents', deductionPercentage: 0 },
+    ];
+
+    const defaultSIMVariant = [
+      { option: 'Dual eSIM', deductionPercentage: 0 },
+      { option: 'Dual Physical SIM', deductionPercentage: 0 },
+      { option: 'eSIM + Physical SIM', deductionPercentage: 0 }
+    ];
+
+    const defaultPTA = [
+      { option: 'Is Your iPhone PTA Approved?', deductionPercentage: 0 },
+      { option: 'Is Your iPhone Factory Unlocked?', deductionPercentage: 0 }
+    ];
+
+    const defaultAccessories = [
+      { option: 'Everything (Complete Box)', deductionPercentage: 0, image: '' },
+      { option: 'Box Only', deductionPercentage: 0, image: '' },
+      { option: 'iPhone Only', deductionPercentage: 0, image: '' }
+    ];
+
+
+    // Update basic fields
+    if (vendor) existingIPhone.vendor = vendor;
+    if (deviceType) existingIPhone.deviceType = deviceType;
+    if (modelName) existingIPhone.modelName = modelName;
+    if (maxPrice) existingIPhone.maxPrice = maxPrice;
+
+    const updateDeductionsIfZero = (existing = [], incoming = [], defaults = []) => {
+  if (!incoming || !Array.isArray(incoming) || incoming.length === 0) {
+    // Return existing if available, otherwise use defaults
+    return existing.length > 0 ? existing : defaults;
+  }
+
+  return incoming.map((item, index) => {
+    const defaultItem = defaults[index] || {}; // Use defaults if no incoming or existing
+    const existingItem = existing[index] || {}; // Use existing data if available
+
+    return {
+      ...defaultItem,  // Default as base
+      ...existingItem,  // Preserve existing data
+      ...item,  // Override with incoming data
+      deductionPercentage: item.deductionPercentage !== undefined 
+        ? item.deductionPercentage 
+        : (existingItem.deductionPercentage !== undefined
+          ? existingItem.deductionPercentage
+          : defaultItem.deductionPercentage || 0)  // Fallback to default or zero
+    };
+  });
+};
+
+
+    // Handle colors and image uploads
+    if (colors) {
+      const colorsArray = colors.split(',');
+
+      const updatedColors = await Promise.all(colorsArray.map(async (color) => {
+        const existingColor = existingIPhone.colors.find(c => c.color === color);
+        const uploadedImage = req.files.find(file => file.fieldname === `images_${color}`);
+
+        console.log(`Processing color: ${color}, existingColor: ${existingColor ? existingColor.color : 'N/A'}`);
+
+        let imageUrl = existingColor?.image || '';
+
+        if (uploadedImage) {
+          console.log(`Uploading image for color: ${color}`);
+          const fileName = `${modelName.replace(/\s/g, '_')}_${color}_${uuidv4()}`;
+          imageUrl = await uploadToCloudinary(uploadedImage, fileName);
+          console.log(`Uploaded image URL: ${imageUrl}`);
+        }
+
+        return { color, image: imageUrl };
+      }));
+
+      existingIPhone.colors = updatedColors;
+    }
+
+    // Update storage sizes (ensure storageSizes is an array)
+    if (storageSizes) {
+      const storageSizesArray = Array.isArray(storageSizes) ? storageSizes : storageSizes.split(',');
+      existingIPhone.storageSizes = storageSizesArray.map(size => ({
+        size: typeof size === 'object' ? size.size : size, // Handle case if size is an object
+        deductionPercentage: size.deductionPercentage || 0, // Default to 0 if not provided
+      }));
+    }
+
+    // Update payment options
+    if (paymentOptions) {
+      const paymentOptionsArray = Array.isArray(paymentOptions)
+        ? paymentOptions
+        : JSON.parse(paymentOptions);
+
+      // Check and update paymentOptions
+      existingIPhone.paymentOptions = paymentOptionsArray.map(item => ({
+        option: item.option,
+        deductionPercentage: item.deductionPercentage || 0,
+      }));
+    }
+
+
+    // Update battery health
+    if (Array.isArray(batteryHealth)) {
+      existingIPhone.batteryHealth = batteryHealth.map(item => ({
+        health: item.health,
+        deductionPercentage: item.deductionPercentage || 0,
+      }));
+    }
+  
+
+    // Update cosmetic issues
+    if (Array.isArray(cosmeticIssues)) {
+      existingIPhone.cosmeticIssues = cosmeticIssues.map(item => ({
+        header: item.header,
+        condition: item.condition,
+        deductionPercentage: item.deductionPercentage || 0,
+        image: item.image || '',
+      }));
+    }
+
+    // Update faults
+    if (Array.isArray(faults)) {
+      existingIPhone.faults = faults.map(item => ({
+        header: item.header,
+        condition: item.condition,
+        deductionPercentage: item.deductionPercentage || 0,
+        image: item.image || '',
+      }));
+    }
+
+    // Update repairs
+    if (Array.isArray(repairs)) {
+      existingIPhone.repairs = repairs.map(item => ({
+        repair: item.repair,
+        deductionPercentage: item.deductionPercentage || 0,
+        image: item.image || '',
+      }));
+    }
+
+    // Update front screen
+    if (Array.isArray(frontScreen)) {
+      existingIPhone.frontScreen = frontScreen.map(item => ({
+        header: item.header,
+        condition: item.condition,
+        deductionPercentage: item.deductionPercentage || 0,
+        image: item.image || '',
+      }));
+    }
+
+    // Update back
+    if (Array.isArray(back)) {
+      existingIPhone.back = back.map(item => ({
+        header: item.header,
+        condition: item.condition,
+        deductionPercentage: item.deductionPercentage || 0,
+        image: item.image || '',
+      }));
+    }
+
+    // Update side
+    if (Array.isArray(side)) {
+      existingIPhone.side = side.map(item => ({
+        header: item.header,
+        condition: item.condition,
+        deductionPercentage: item.deductionPercentage || 0,
+        image: item.image || '',
+      }));
+    }
+
+    // Update simVariant
+    if (Array.isArray(simVariant)) {
+      existingIPhone.simVariant = simVariant.map(item => ({
+        option: item.option,
+        deductionPercentage: item.deductionPercentage || 0,
+      }));
+    }
+
+    // Update PTA
+    if (Array.isArray(pta)) {
+      existingIPhone.pta = pta.map(item => ({
+        option: item.option,
+        deductionPercentage: item.deductionPercentage || 0,
+      }));
+    }
+
+    // Update unknown part
+    if (Array.isArray(unknownPart)) {
+      existingIPhone.unknownPart = unknownPart.map(item => ({
+        option: item.option,
+        deductionPercentage: item.deductionPercentage || 0,
+      }));
+    }
+
+    // Update accessories
+    if (Array.isArray(accessories)) {
+      existingIPhone.accessories = accessories.map(item => ({
+        option: item.option,
+        deductionPercentage: item.deductionPercentage || 0,
+        image: item.image || '',
+      }));
+    }
+
+    existingIPhone.batteryHealth = updateDeductionsIfZero(existingIPhone.batteryHealth, batteryHealth, batteryHealthOptions);
+    existingIPhone.cosmeticIssues = updateDeductionsIfZero(existingIPhone.cosmeticIssues, cosmeticIssues, defaultCosmeticIssues);
+    existingIPhone.faults = updateDeductionsIfZero(existingIPhone.faults, faults, defaultFaults);
+    existingIPhone.repairs = updateDeductionsIfZero(existingIPhone.repairs, repairs, defaultRepairs);
+    existingIPhone.frontScreen = updateDeductionsIfZero(existingIPhone.frontScreen, frontScreen, defaultFrontScreen);
+    existingIPhone.back = updateDeductionsIfZero(existingIPhone.back, back, defaultBack);
+    existingIPhone.side = updateDeductionsIfZero(existingIPhone.side, side, defaultSide);
+    existingIPhone.simVariant = updateDeductionsIfZero(existingIPhone.simVariant, simVariant, defaultSIMVariant);
+    existingIPhone.pta = updateDeductionsIfZero(existingIPhone.pta, pta, defaultPTA);
+    existingIPhone.unknownPart = updateDeductionsIfZero(existingIPhone.unknownPart, unknownPart, defaultUnknownPart);
+    existingIPhone.accessories = updateDeductionsIfZero(existingIPhone.accessories, accessories, defaultAccessories);
+
+    // Save updated iPhone document
+    const updatedIPhone = await existingIPhone.save();
+
+    res.json(updatedIPhone);
+  } catch (error) {
+    console.error('Error updating iPhone:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
 
 // Route to get all iPhones or fetch by ID
 router.get('/', async (req, res) => {
