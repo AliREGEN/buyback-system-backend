@@ -39,10 +39,17 @@ router.post('/', upload.any(), async (req, res) => {
     const paymentOptionsArray = Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]');
      const watchCaseFinishArray = Array.isArray(watchCaseFinish) ? watchCaseFinish : watchCaseFinish.split(',');
       const watchCaseSizesArray = Array.isArray(watchCaseSize) ? watchCaseSize : watchCaseSize.split(',');
+      const watchCaseTypeArray = Array.isArray(watchCaseType) ? watchCaseType : watchCaseType.split(',');
 
     // Ensure each watchCaseSize is formatted properly
     const watchCaseSizeFormatted = watchCaseSizesArray.map(size => ({
       size, // Map the size directly
+      deductionPercentage: 0 // Set default deductionPercentage
+    }));
+
+    // Ensure each watchCaseType is formatted properly
+    const watchCaseTypeFormatted = watchCaseTypeArray.map(type => ({
+      caseType: type, // Map the type directly
       deductionPercentage: 0 // Set default deductionPercentage
     }));
     
@@ -147,10 +154,6 @@ const defaultBandsType = [
   { option: 'Aftermarket Band', deductionPercentage: 0 },
 ];
 
-const watchCaseTypeArray = watchCaseType
-  ? watchCaseType.split(',').map(type => ({ caseType: type, deductionPercentage: 0 }))
-  : [];
-
 
     const newWatch = new Watch({
       id: uuidv4(),
@@ -159,7 +162,7 @@ const watchCaseTypeArray = watchCaseType
       modelName,
       maxPrice,
       paymentOptions: paymentOptionsArray,
-      watchCaseType: watchCaseTypeArray,
+      watchCaseType: watchCaseTypeFormatted,
       watchCaseFinish: caseFinishImagesArray,
       watchCaseSize: watchCaseSizeFormatted,
       strapCondition: defaultStrapCondition,
@@ -342,7 +345,7 @@ const defaultBandsType = [
 
       const updatedCaseFinishImages = await Promise.all(watchCaseFinishArray.map(async (finish) => {
         const existingFinish = existingWatch.watchCaseFinish.find(c => c.finish === finish);
-        const uploadedImage = req.files.find(file => file.feildname === `images_${finish}`);
+        const uploadedImage = req.files.find(file => file.fieldname === `images_${finish}`);
 
         console.log(`Processing Finish: ${finish}, existingFinish: ${existingFinish ? existingFinish.finish : 'N/A'}`);
 
@@ -581,20 +584,28 @@ const defaultBandsType = [
     if (modelName) existingWatch.modelName = modelName;
     if (maxPrice) existingWatch.maxPrice = maxPrice;
 
-            const updateDeductionsIfZero = (existing, incoming, defaults) => {
-      // If incoming data is missing, use defaults
-      if (!incoming || !Array.isArray(incoming)) return defaults;
+    const updateDeductionsIfZero = (existing = [], incoming = [], defaults = []) => {
+  if (!incoming || !Array.isArray(incoming) || incoming.length === 0) {
+    // Return existing if available, otherwise use defaults
+    return existing.length > 0 ? existing : defaults;
+  }
 
-      // If the incoming data exists, but is missing key fields (like header/condition), replace them
-      return incoming.map((item, index) => {
-        const defaultItem = defaults[index] || {};
-        return {
-          ...defaultItem, // Use defaults as base
-          ...item, // Override with incoming data if exists
-          deductionPercentage: item.deductionPercentage || (existing[index]?.deductionPercentage || 0),
-        };
-      });
+  return incoming.map((item, index) => {
+    const defaultItem = defaults[index] || {}; // Use defaults if no incoming or existing
+    const existingItem = existing[index] || {}; // Use existing data if available
+
+    return {
+      ...defaultItem,  // Default as base
+      ...existingItem,  // Preserve existing data
+      ...item,  // Override with incoming data
+      deductionPercentage: item.deductionPercentage !== undefined 
+        ? item.deductionPercentage 
+        : (existingItem.deductionPercentage !== undefined
+          ? existingItem.deductionPercentage
+          : defaultItem.deductionPercentage || 0)  // Fallback to default or zero
     };
+  });
+};
 
     // Handle payment options
     if (paymentOptions) {
