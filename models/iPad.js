@@ -52,6 +52,7 @@ const ConnectivitySchema = new mongoose.Schema({
 
 const ApplePencilSchema = new mongoose.Schema({
   generation: { type: String, required: true },
+  header: { type: String, required: true },
   condition: { type: String, required: true },
   deductionPercentage: { type: Number, default: 0 },
 });

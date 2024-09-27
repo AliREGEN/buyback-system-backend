@@ -341,7 +341,7 @@ router.put('/:id/device-management', upload.any(), async (req, res) => {
     if (modelName) existingIPhone.modelName = modelName;
     if (maxPrice) existingIPhone.maxPrice = maxPrice;
 
-        const updateDeductionsIfZero = (existing, incoming, defaults) => {
+    const updateDeductionsIfZero = (existing, incoming, defaults) => {
       // If incoming data is missing, use defaults
       if (!incoming || !Array.isArray(incoming)) return defaults;
 
