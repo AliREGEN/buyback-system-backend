@@ -559,20 +559,28 @@ router.put('/:id/device-details', upload.any(), async (req, res) => {
         if (modelName) existingSamsung.modelName = modelName;
         if (maxPrice) existingSamsung.maxPrice = maxPrice;
 
-            const updateDeductionsIfZero = (existing, incoming, defaults) => {
-      // If incoming data is missing, use defaults
-      if (!incoming || !Array.isArray(incoming)) return defaults;
+    const updateDeductionsIfZero = (existing = [], incoming = [], defaults = []) => {
+  if (!incoming || !Array.isArray(incoming) || incoming.length === 0) {
+    // Return existing if available, otherwise use defaults
+    return existing.length > 0 ? existing : defaults;
+  }
 
-      // If the incoming data exists, but is missing key fields (like header/condition), replace them
-      return incoming.map((item, index) => {
-        const defaultItem = defaults[index] || {};
-        return {
-          ...defaultItem, // Use defaults as base
-          ...item, // Override with incoming data if exists
-          deductionPercentage: item.deductionPercentage || (existing[index]?.deductionPercentage || 0),
-        };
-      });
+  return incoming.map((item, index) => {
+    const defaultItem = defaults[index] || {}; // Use defaults if no incoming or existing
+    const existingItem = existing[index] || {}; // Use existing data if available
+
+    return {
+      ...defaultItem,  // Default as base
+      ...existingItem,  // Preserve existing data
+      ...item,  // Override with incoming data
+      deductionPercentage: item.deductionPercentage !== undefined 
+        ? item.deductionPercentage 
+        : (existingItem.deductionPercentage !== undefined
+          ? existingItem.deductionPercentage
+          : defaultItem.deductionPercentage || 0)  // Fallback to default or zero
     };
+  });
+};
 
         if (colors) {
             const colorsArray = colors.split(',');
