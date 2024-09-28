@@ -5,7 +5,7 @@ const iPhonePreset = require('../models/iPhonePreset');
 // Create a new iPhone preset
 router.post('/', async (req, res) => {
   try {
-    const { modelName, vendor, deviceType, batteryHealth, cosmeticIssues, faults, repairs, frontScreen, back, side, simVariant, pta, accessories } = req.body;
+    const { modelName, vendor, deviceType, cosmeticIssues, faults, repairs, frontScreen, back, side, pta, accessories, unknownPart } = req.body;
 
     // Check if a preset with the same model name already exists
     const existingPreset = await iPhonePreset.findOne({ modelName });
@@ -86,7 +86,7 @@ router.get('/:modelName', async (req, res) => {
 router.put('/:modelName', async (req, res) => {
   try {
     const { modelName } = req.params;
-    const { paymentOptions, storageSizes, batteryHealth, cosmeticIssues, faults, repairs, frontScreen, back, side, simVariant, pta, accessories } = req.body;
+    const { paymentOptions, cosmeticIssues, faults, repairs, frontScreen, back, side, simVariant, pta, accessories, unknownPart } = req.body;
 
     // Find the existing preset
     const existingPreset = await iPhonePreset.findOne({ modelName });
@@ -96,17 +96,15 @@ router.put('/:modelName', async (req, res) => {
 
     // Update fields
     existingPreset.paymentOptions = paymentOptions || existingPreset.paymentOptions;
-    existingPreset.storageSizes = storageSizes || existingPreset.storageSizes;
-    existingPreset.batteryHealth = batteryHealth || existingPreset.batteryHealth;
     existingPreset.cosmeticIssues = cosmeticIssues || existingPreset.cosmeticIssues;
     existingPreset.faults = faults || existingPreset.faults;
     existingPreset.repairs = repairs || existingPreset.repairs;
     existingPreset.frontScreen = frontScreen || existingPreset.frontScreen;
     existingPreset.back = back || existingPreset.back;
     existingPreset.side = side || existingPreset.side;
-    existingPreset.simVariant = simVariant || existingPreset.simVariant;
     existingPreset.pta = pta || existingPreset.pta;
     existingPreset.accessories = accessories || existingPreset.accessories;
+    existingPreset.unknownPart = unknownPart || existingPreset.unknownPart;
 
     await existingPreset.save();
     res.status(200).json(existingPreset);
