@@ -1,9 +1,19 @@
+const mongoose = require('mongoose');
 const Samsung = require('../models/Samsung');
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
 const cloudinary = require('../config/cloudinary');
+const CosmeticIssues = require('../models/cosmeticIssueOption');
+const Faults = require('../models/faultOption');
+const Repairs = require('../models/repairOption');
+const FrontScreen = require('../models/frontScreenOption');
+const Back = require('../models/backOption');
+const Side = require('../models/sideOption');
+const SIMVariant = require('../models/simVariantOption');
+const PTA = require('../models/ptaOption');
+const Accessories = require('../models/accessoriesOption');
 
 // Multer configuration
 const storage = multer.memoryStorage();
@@ -28,763 +38,414 @@ const uploadToCloudinary = (file, fileName) => {
   });
 };
 
+const safeParse = (value) => {
+  try {
+    if (!value || value === 'undefined') {
+      return []; // Return an empty array for undefined or invalid input
+    }
+    return JSON.parse(value); // Parse if it's a valid JSON string
+  } catch (error) {
+    console.error('Error parsing JSON:', error);
+    return []; // Return an empty array in case of error
+  }
+};
+
+const mapDynamicOptions = (parsedArray, optionsArray) => {
+  return parsedArray.map((item) => {
+    const matchedOption = optionsArray.find(
+      (opt) => opt._id.toString() === item.toString()  // Ensure ObjectId comparison consistency
+    );
+    if (matchedOption) {
+      console.log(`Matched Option: ${matchedOption._id} for Parsed Item: ${item}`);
+    } else {
+      console.log(`No match found for Parsed Item: ${item}`);
+    }
+    return matchedOption ? matchedOption._id : null;
+  }).filter(Boolean);  // Filter null or undefined results
+};
+
+const fetchOptions = async () => {
+  const cosmeticIssuesOptions = await CosmeticIssues.find();
+  const faultsOptions = await Faults.find();
+  const repairsOptions = await Repairs.find();
+  const frontScreenOptions = await FrontScreen.find();
+  const backOptions = await Back.find();
+  const sideOptions = await Side.find();
+  const simVariantOptions = await SIMVariant.find();
+  const ptaOptions = await PTA.find();
+  const accessoriesOptions = await Accessories.find();
+
+  return {
+    cosmeticIssuesOptions,
+    faultsOptions,
+    repairsOptions,
+    frontScreenOptions,
+    backOptions,
+    sideOptions,
+    simVariantOptions,
+    ptaOptions,
+    accessoriesOptions,
+  };
+};
+
 // Route to add a new Samsung phone
 router.post('/', upload.any(), async (req, res) => {
-    try {
-        console.log('Received Body: ', req.body);
-        console.log('Received Files: ', req.files);
+  try {
+    // Fetch options dynamically from their respective collections
+    const options = await fetchOptions();
 
-        const { vendor, deviceType, modelName, maxPrice, colors, storageSizes, paymentOptions } = req.body;
+    // Log options fetched from collections for debugging
+    console.log('Available options:', options);
 
-        const colorsArray = colors ? colors.split(',') : [];
-        const storageSizesArray = storageSizes ? storageSizes.split(',') : [];
+    const {
+      vendor, deviceType, modelName, maxPrice, colors, storageSizes, paymentOptions, cosmeticIssues, faults, repairs, frontScreen, back, side, simVariant, pta, accessories
+    } = req.body;
 
-        let colorImageArray = [];
+    // Parsing the passed data, only if values exist
+    const parsedCosmeticIssues = cosmeticIssues ? safeParse(cosmeticIssues) : [];
+    const parsedFaults = faults ? safeParse(faults) : [];
+    const parsedRepairs = repairs ? safeParse(repairs) : [];
+    const parsedFrontScreen = frontScreen ? safeParse(frontScreen) : [];
+    const parsedBack = back ? safeParse(back) : [];
+    const parsedSide = side ? safeParse(side) : [];
+    const parsedSimVariant = simVariant ? safeParse(simVariant) : [];
+    const parsedPta = pta ? safeParse(pta) : [];
+    const parsedAccessories = accessories ? safeParse(accessories) : [];
 
-        if (req.files && req.files.length) {
-            for (let i = 0; i < req.files.length; i++) {
-                const colorName = colorsArray[i];
-                const file = req.files[i];
-                const fileName = `${modelName.replace(/\s/g, '_')}_${colorName}_${uuidv4()}`;
+    // Log parsed data for debugging
+    console.log('Parsed Cosmetic Issues:', parsedCosmeticIssues);
+    console.log('Parsed Faults:', parsedFaults);
+    console.log('Parsed Repairs:', parsedRepairs);
+    console.log('Parsed Front Screen:', parsedFrontScreen);
+    console.log('Parsed Back:', parsedBack);
+    console.log('Parsed Side:', parsedSide);
+    console.log('Parsed SIM Variant:', parsedSimVariant);
+    console.log('Parsed PTA:', parsedPta);
+    console.log('Parsed Accessories:', parsedAccessories);
 
-                const imageUrl = await uploadToCloudinary(file, fileName);
-                colorImageArray.push({ color: colorName, image: imageUrl });
-            }
-        } else {
-            colorImageArray = colorsArray.map((color) => ({
-                color,
-                image: null,
-            }));
-        }
+    // Mapping the parsed data to correct ObjectIds, only if the field exists
+    const correctCosmeticIssueIds = parsedCosmeticIssues.length ? mapDynamicOptions(parsedCosmeticIssues, options.cosmeticIssuesOptions) : [];
+    const correctFaultIds = parsedFaults.length ? mapDynamicOptions(parsedFaults, options.faultsOptions) : [];
+    const correctRepairIds = parsedRepairs.length ? mapDynamicOptions(parsedRepairs, options.repairsOptions) : [];
+    const correctFrontScreenIds = parsedFrontScreen.length ? mapDynamicOptions(parsedFrontScreen, options.frontScreenOptions) : [];
+    const correctBackIds = parsedBack.length ? mapDynamicOptions(parsedBack, options.backOptions) : [];
+    const correctSideIds = parsedSide.length ? mapDynamicOptions(parsedSide, options.sideOptions) : [];
+    const correctSimVariantIds = parsedSimVariant.length ? mapDynamicOptions(parsedSimVariant, options.simVariantOptions) : [];
+    const correctPtaIds = parsedPta.length ? mapDynamicOptions(parsedPta, options.ptaOptions) : [];
+    const correctAccessoriesIds = parsedAccessories.length ? mapDynamicOptions(parsedAccessories, options.accessoriesOptions) : [];
 
-      const defaultCosmeticIssues = [
-      { header: 'Damaged Display', condition: 'Front glass is cracked or shattered', deductionPercentage: 0 },
-      { header: 'Damaged Back', condition: 'Back glass is cracked or shattered', deductionPercentage: 0 },
-      { header: 'Damaged Camera Lens', condition: 'Camera lens is cracked or shattered', deductionPercentage: 0 },
-      { header: 'Damaged Frame', condition: 'Phone body is cracked/bent or broken', deductionPercentage: 0 }
-    ];
+    // Log mapped IDs for debugging
+    console.log("Correct Fault Ids: ", correctFaultIds);
+    console.log("Correct Cosmetic Issue Ids: ", correctCosmeticIssueIds);
+    console.log("Correct Repair Ids: ", correctRepairIds);
+    console.log("Correct Front Screen Ids: ", correctFrontScreenIds);
+    console.log("Correct Back Ids: ", correctBackIds);
+    console.log("Correct Side Ids: ", correctSideIds);
+    console.log("Correct SIM Variant Ids: ", correctSimVariantIds);
+    console.log("Correct PTA Ids: ", correctPtaIds);
+    console.log("Correct Accessories Ids: ", correctAccessoriesIds);
 
-    const paymentOptionsArray = Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]');
-    console.log('Payment Options Array: ', paymentOptionsArray);
+    const colorsArray = colors ? colors.split(',') : [];
+    const storageSizesArray = storageSizes ? storageSizes.split(',') : [];
+    let colorImageArray = [];
 
-        const defaultFaults = [
-      { header: 'Faulty Display', condition: 'Dead Pixels/Spots/Lines', deductionPercentage: 0},
-      { header: 'Faulty Earpiece', condition: 'No Audio/Noisy Audio during phone calls', deductionPercentage: 0 },
-      { header: 'Faulty Face ID', condition: 'Face ID is not working or not working consistently', deductionPercentage: 0 },
-      { header: 'Faulty In-Display Fingerprint', condition: 'Fingerprint Sensor is not working or not working consistently', deductionPercentage: 0 },
-      { header: 'Faulty Proximity Sensor', condition: 'Display remains on during calls', deductionPercentage: 0 },
-      { header: 'Faulty Vibration Motor', condition: 'No Vibration/Rattling Noise', deductionPercentage: 0 },
-      { header: 'Faulty Power Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
-      { header: 'Faulty Volume Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
-      { header: 'Faulty Mute Switch', condition: 'Not Working/Not Switching', deductionPercentage: 0 },
-      { header: 'Faulty Front Camera', condition: 'Front Camera does not work, or the image is blurry', deductionPercentage: 0 },
-      { header: 'Faulty Rear Camera', condition: 'Rear Camera does not work, or the image is blurry', deductionPercentage: 0 },
-      { header: 'Faulty Flash', condition: 'Dead/Not Working', deductionPercentage: 0 },
-      { header: 'Faulty Microphone', condition: 'Not Working/Noisy', deductionPercentage: 0 },
-      { header: 'Faulty Loudspeaker', condition: 'No Audio/Noisy Audio', deductionPercentage: 0 },
-      { header: 'Faulty Charging Port', condition: 'Dead/Not Working', deductionPercentage: 0 },
-    ];
+    // Image handling
+    if (req.files && req.files.length) {
+      for (let i = 0; i < req.files.length; i++) {
+        const colorName = colorsArray[i];
+        const file = req.files[i];
+        const fileName = `${modelName.replace(/\s/g, '_')}_${colorName}_${uuidv4()}`;
+        const imageUrl = await uploadToCloudinary(file, fileName);
+        colorImageArray.push({ color: colorName, image: imageUrl });
+      }
+    } else {
+      colorImageArray = colorsArray.map((color) => ({
+        color,
+        image: null,
+      }));
+    }
 
-    const defaultRepairs = [
-      { repair: 'Touch Screen Replaced', deductionPercentage: 0 },
-      { repair: 'Display Replaced', deductionPercentage: 0 },
-      { repair: 'Front Camera Replaced', deductionPercentage: 0 },
-      { repair: 'Back Camera Replaced', deductionPercentage: 0 },
-      { repair: 'Loudspeaker Replaced', deductionPercentage: 0 },
-      { repair: 'Earpiece Replaced', deductionPercentage: 0 },
-      { repair: 'Microphone Replaced', deductionPercentage: 0 },
-      { repair: 'Battery Replaced', deductionPercentage: 0 },
-      { repair: 'Battery Replaced by REGEN', deductionPercentage: 0 },
-      { repair: 'Motherboard Repaired', deductionPercentage: 0 },
-      { repair: 'Other Repairs', deductionPercentage: 0 }
-    ];
-
-    const defaultFrontScreen = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no deep scratches', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible scratches, swirls, 1 - 2 minor deep scratches', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, swirls, noticeable deep scratches', deductionPercentage: 0 },
-    ];
-
-    const defaultBack = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no deep scratches', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible scratches, swirls, 1 - 2 minor deep scratches', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, swirls, noticeable deep scratches', deductionPercentage: 0 },
-    ];
-
-    const defaultSide = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no scuffs or dents', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible scratches, 1 - 2 minor scuffs or dents', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, noticeable scuffs or dents', deductionPercentage: 0 },
-    ];
-
-    const defaultSIMVariant = [
-      { option: 'Dual Physical SIM', deductionPercentage: 0 },
-      { option: 'eSIM + Physical SIM', deductionPercentage: 0 }
-    ];
-
-    const defaultPTA = [
-      { option: 'Is Your Phone Official PTA Approved?', deductionPercentage: 0 },
-      { option: 'Is Your Phone CPID Approved?', deductionPercentage: 0 },
-      { option: 'Is Your Phone Patched?', deductionPercentage: 0 }      
-    ];
-
-    const defaultAccessories = [
-      { option: 'Everything (Complete Box)', deductionPercentage: 0, image: '' },
-      { option: 'Box Only', deductionPercentage: 0, image: '' },
-      { option: 'Phone Only', deductionPercentage: 0, image: '' }
-    ];
-
+    // Create new Samsung document with correct ObjectIDs
     const newSamsung = new Samsung({
-        id: uuidv4(),
-        vendor,
-        deviceType,
-        modelName,
-        maxPrice,
-        colors: colorImageArray,
-        storageSizes: storageSizesArray.map(size => ({
-            size: size,
-            deductionPercentage: 0,
-        })),
-        paymentOptions: paymentOptionsArray,
-        cosmeticIssues: defaultCosmeticIssues,
-        faults: defaultFaults,
-        repairs: defaultRepairs,
-        frontScreen: defaultFrontScreen,
-        back: defaultBack,
-        side: defaultSide,
-        simVariant: defaultSIMVariant,
-        pta: defaultPTA,
-        accessories: defaultAccessories,
+      id: uuidv4(),
+      vendor,
+      deviceType,
+      modelName,
+      maxPrice,
+      colors: colorImageArray,
+      storageSizes: storageSizesArray.map(size => ({
+        size,
+        deductionPercentage: 0,
+      })),
+      paymentOptions: Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]'),
+      cosmeticIssues: correctCosmeticIssueIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      faults: correctFaultIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      repairs: correctRepairIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      frontScreen: correctFrontScreenIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      back: correctBackIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      side: correctSideIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      simVariant: correctSimVariantIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      pta: correctPtaIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      accessories: correctAccessoriesIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
     });
 
+    // Save the new Samsung document
     await newSamsung.save();
-    console.log('New Samsung Phone Added: ', newSamsung);
+    console.log('New Samsung saved to MongoDB:', newSamsung);
     return res.status(201).json(newSamsung);
-    } catch (error) {
-        console.error('Error Adding Samsung Phone: ', error);
-        return res.status(500).json({ error: 'Internal Server Error' });
-    }
+
+  } catch (error) {
+    console.error('Error adding Samsung:', error);
+    return res.status(500).json({ message: 'Server Error' });
+  }
 });
 
 // update a Samsung phone
-router.put('/:id/device-management', upload.any(), async (req, res) => {
-    try {
-        const {
-            vendor,
-            deviceType,
-            modelName,
-            maxPrice,
-            colors,
-            storageSizes,
-            paymentOptions,
-            cosmeticIssues,
-            faults,
-            repairs,
-            frontScreen,
-            back,
-            side,
-            simVariant,
-            pta,
-            accessories,
-        } = req.body;
+router.put('/:id', upload.any(), async (req, res) => {
+  try {
+    // Fetch options dynamically from their respective collections
+    const options = await fetchOptions();
 
-        const existingSamsung = await Samsung.findById(req.params.id);
-        if (!existingSamsung) {
-            return res.status(404).json({ error: 'Samsung Phone not found' });
+    const {
+      vendor, deviceType, modelName, maxPrice, colors, storageSizes, paymentOptions,
+     cosmeticIssues, faults, repairs, frontScreen, back, side, simVariant, pta, accessories
+    } = req.body;
+
+    // Find the existing Samsung document
+    const existingSamsung = await Samsung.findById(req.params.id);
+    if (!existingSamsung) {
+      return res.status(404).json({ message: 'Samsung Phone not found' });
+    }
+
+    // Parsing the passed data, only if values exist
+    const parsedCosmeticIssues = cosmeticIssues ? safeParse(cosmeticIssues) : existingSamsung.cosmeticIssues.map(opt => opt.option);
+    const parsedFaults = faults ? safeParse(faults) : existingSamsung.faults.map(opt => opt.option);
+    const parsedRepairs = repairs ? safeParse(repairs) : existingSamsung.repairs.map(opt => opt.option);
+    const parsedFrontScreen = frontScreen ? safeParse(frontScreen) : existingSamsung.frontScreen.map(opt => opt.option);
+    const parsedBack = back ? safeParse(back) : existingSamsung.back.map(opt => opt.option);
+    const parsedSide = side ? safeParse(side) : existingSamsung.side.map(opt => opt.option);
+    const parsedSimVariant = simVariant ? safeParse(simVariant) : existingSamsung.simVariant.map(opt => opt.option);
+    const parsedPta = pta ? safeParse(pta) : existingSamsung.pta.map(opt => opt.option);
+    const parsedAccessories = accessories ? safeParse(accessories) : existingSamsung.accessories.map(opt => opt.option);
+
+    // Mapping the parsed data to correct ObjectIds, only if the field exists
+    const correctCosmeticIssueIds = parsedCosmeticIssues.length ? mapDynamicOptions(parsedCosmeticIssues, options.cosmeticIssuesOptions) : existingSamsung.cosmeticIssues.map(opt => opt.option);
+    const correctFaultIds = parsedFaults.length ? mapDynamicOptions(parsedFaults, options.faultsOptions) : existingSamsung.faults.map(opt => opt.option);
+    const correctRepairIds = parsedRepairs.length ? mapDynamicOptions(parsedRepairs, options.repairsOptions) : existingSamsung.repairs.map(opt => opt.option);
+    const correctFrontScreenIds = parsedFrontScreen.length ? mapDynamicOptions(parsedFrontScreen, options.frontScreenOptions) : existingSamsung.frontScreen.map(opt => opt.option);
+    const correctBackIds = parsedBack.length ? mapDynamicOptions(parsedBack, options.backOptions) : existingSamsung.back.map(opt => opt.option);
+    const correctSideIds = parsedSide.length ? mapDynamicOptions(parsedSide, options.sideOptions) : existingSamsung.side.map(opt => opt.option);
+    const correctSimVariantIds = parsedSimVariant.length ? mapDynamicOptions(parsedSimVariant, options.simVariantOptions) : existingSamsung.simVariant.map(opt => opt.option);
+    const correctPtaIds = parsedPta.length ? mapDynamicOptions(parsedPta, options.ptaOptions) : existingSamsung.pta.map(opt => opt.option);
+    const correctAccessoriesIds = parsedAccessories.length ? mapDynamicOptions(parsedAccessories, options.accessoriesOptions) : existingSamsung.accessories.map(opt => opt.option);
+
+    // Log mapped IDs for debugging
+    console.log("Correct Fault Ids: ", correctFaultIds);
+    console.log("Correct Cosmetic Issue Ids: ", correctCosmeticIssueIds);
+    console.log("Correct Repair Ids: ", correctRepairIds);
+    console.log("Correct Front Screen Ids: ", correctFrontScreenIds);
+    console.log("Correct Back Ids: ", correctBackIds);
+    console.log("Correct Side Ids: ", correctSideIds);
+    console.log("Correct SIM Variant Ids: ", correctSimVariantIds);
+    console.log("Correct PTA Ids: ", correctPtaIds);
+    console.log("Correct Accessories Ids: ", correctAccessoriesIds);
+
+    if (vendor) {
+      existingSamsung.vendor = vendor;
+    }
+    if (deviceType) {
+      existingSamsung.deviceType = deviceType;
+    }
+    if (modelName) {
+      existingSamsung.modelName = modelName;
+    }
+    if (maxPrice) {
+      existingSamsung.maxPrice = maxPrice;
+    }
+
+    // Handle colors and image uploads
+    if (colors) {
+      const colorsArray = colors.split(',');
+      const updatedColors = await Promise.all(colorsArray.map(async (color) => {
+        const existingColor = existingSamsung.colors.find(c => c.color === color);
+        const uploadedImage = req.files.find(file => file.fieldname === `images_${color}`);
+        let imageUrl = existingColor?.image || '';
+        if (uploadedImage) {
+          const fileName = `${modelName.replace(/\s/g, '_')}_${color}_${uuidv4()}`;
+          imageUrl = await uploadToCloudinary(uploadedImage, fileName);
         }
+        return { color, image: imageUrl };
+      }));
+      existingSamsung.colors = updatedColors;
+    }
 
-        console.log('Received Body: ', req.body);
-        console.log('Received Files: ', req.files);
+    // Handle storage sizes
+    if (storageSizes) {
+      const storageSizesArray = Array.isArray(storageSizes) ? storageSizes : storageSizes.split(',');
+      existingSamsung.storageSizes = storageSizesArray.map(size => ({
+        size,
+        deductionPercentage: 0,
+      }));
+    }
 
-                    const defaultCosmeticIssues = [
-      { header: 'Damaged Display', condition: 'Front glass is cracked or shattered', deductionPercentage: 0 },
-      { header: 'Damaged Back', condition: 'Back glass is cracked or shattered', deductionPercentage: 0 },
-      { header: 'Damaged Camera Lens', condition: 'Camera lens is cracked or shattered', deductionPercentage: 0 },
-      { header: 'Damaged Frame', condition: 'Phone body is cracked/bent or broken', deductionPercentage: 0 }
-    ];
+    if (paymentOptions) {
+      existingSamsung.paymentOptions = Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]');
+    }
 
-    const paymentOptionsArray = Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]');
-    console.log('Payment Options Array: ', paymentOptionsArray);
-
-        const defaultFaults = [
-      { header: 'Faulty Display', condition: 'Dead Pixels/Spots/Lines', deductionPercentage: 0},
-      { header: 'Faulty Earpiece', condition: 'No Audio/Noisy Audio during phone calls', deductionPercentage: 0 },
-      { header: 'Faulty Face ID', condition: 'Face ID is not working or not working consistently', deductionPercentage: 0 },
-      { header: 'Faulty In-Display Fingerprint', condition: 'Fingerprint Sensor is not working or not working consistently', deductionPercentage: 0 },
-      { header: 'Faulty Proximity Sensor', condition: 'Display remains on during calls', deductionPercentage: 0 },
-      { header: 'Faulty Vibration Motor', condition: 'No Vibration/Rattling Noise', deductionPercentage: 0 },
-      { header: 'Faulty Power Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
-      { header: 'Faulty Volume Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
-      { header: 'Faulty Mute Switch', condition: 'Not Working/Not Switching', deductionPercentage: 0 },
-      { header: 'Faulty Front Camera', condition: 'Front Camera does not work, or the image is blurry', deductionPercentage: 0 },
-      { header: 'Faulty Rear Camera', condition: 'Rear Camera does not work, or the image is blurry', deductionPercentage: 0 },
-      { header: 'Faulty Flash', condition: 'Dead/Not Working', deductionPercentage: 0 },
-      { header: 'Faulty Microphone', condition: 'Not Working/Noisy', deductionPercentage: 0 },
-      { header: 'Faulty Loudspeaker', condition: 'No Audio/Noisy Audio', deductionPercentage: 0 },
-      { header: 'Faulty Charging Port', condition: 'Dead/Not Working', deductionPercentage: 0 },
-    ];
-
-    const defaultRepairs = [
-      { repair: 'Touch Screen Replaced', deductionPercentage: 0 },
-      { repair: 'Display Replaced', deductionPercentage: 0 },
-      { repair: 'Front Camera Replaced', deductionPercentage: 0 },
-      { repair: 'Back Camera Replaced', deductionPercentage: 0 },
-      { repair: 'Loudspeaker Replaced', deductionPercentage: 0 },
-      { repair: 'Earpiece Replaced', deductionPercentage: 0 },
-      { repair: 'Microphone Replaced', deductionPercentage: 0 },
-      { repair: 'Battery Replaced', deductionPercentage: 0 },
-      { repair: 'Battery Replaced by REGEN', deductionPercentage: 0 },
-      { repair: 'Motherboard Repaired', deductionPercentage: 0 },
-      { repair: 'Other Repairs', deductionPercentage: 0 }
-    ];
-
-    const defaultFrontScreen = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no deep scratches', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible scratches, swirls, 1 - 2 minor deep scratches', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, swirls, noticeable deep scratches', deductionPercentage: 0 },
-    ];
-
-    const defaultBack = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no deep scratches', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible scratches, swirls, 1 - 2 minor deep scratches', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, swirls, noticeable deep scratches', deductionPercentage: 0 },
-    ];
-
-    const defaultSide = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no scuffs or dents', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible scratches, 1 - 2 minor scuffs or dents', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, noticeable scuffs or dents', deductionPercentage: 0 },
-    ];
-
-    const defaultSIMVariant = [
-      { option: 'Dual Physical SIM', deductionPercentage: 0 },
-      { option: 'eSIM + Physical SIM', deductionPercentage: 0 }
-    ];
-
-    const defaultPTA = [
-      { option: 'Is Your Phone Official PTA Approved?', deductionPercentage: 0 },
-      { option: 'Is Your Phone CPID Approved?', deductionPercentage: 0 },
-      { option: 'Is Your Phone Patched?', deductionPercentage: 0 }      
-    ];
-
-    const defaultAccessories = [
-      { option: 'Everything (Complete Box)', deductionPercentage: 0, image: '' },
-      { option: 'Box Only', deductionPercentage: 0, image: '' },
-      { option: 'Phone Only', deductionPercentage: 0, image: '' }
-    ];
-
-        if (vendor) existingSamsung.vendor = vendor;
-        if (deviceType) existingSamsung.deviceType = deviceType;
-        if (modelName) existingSamsung.modelName = modelName;
-        if (maxPrice) existingSamsung.maxPrice = maxPrice;
-
-            const updateDeductionsIfZero = (existing, incoming, defaults) => {
-      // If incoming data is missing, use defaults
-      if (!incoming || !Array.isArray(incoming)) return defaults;
-
-      // If the incoming data exists, but is missing key fields (like header/condition), replace them
-      return incoming.map((item, index) => {
-        const defaultItem = defaults[index] || {};
+    // Update deduction fields but retain the non-zero deduction percentages
+    const updateDeductionField = (existingField, newOptions) => {
+      return newOptions.map(optionId => {
+        const existingOption = existingField.find(opt => opt.option.toString() === optionId.toString());
         return {
-          ...defaultItem, // Use defaults as base
-          ...item, // Override with incoming data if exists
-          deductionPercentage: item.deductionPercentage || (existing[index]?.deductionPercentage || 0),
+          option: optionId,
+          deductionPercentage: existingOption && existingOption.deductionPercentage !== 0 
+            ? existingOption.deductionPercentage  // Keep the non-zero deduction percentage
+            : 0  // Set to 0 if it's a new entry or the current value is 0
         };
       });
     };
 
-        if (colors) {
-            const colorsArray = colors.split(',');
+    existingSamsung.cosmeticIssues = updateDeductionField(existingSamsung.cosmeticIssues, correctCosmeticIssueIds);
+    existingSamsung.faults = updateDeductionField(existingSamsung.faults, correctFaultIds);
+    existingSamsung.repairs = updateDeductionField(existingSamsung.repairs, correctRepairIds);
+    existingSamsung.frontScreen = updateDeductionField(existingSamsung.frontScreen, correctFrontScreenIds);
+    existingSamsung.back = updateDeductionField(existingSamsung.back, correctBackIds);
+    existingSamsung.side = updateDeductionField(existingSamsung.side, correctSideIds);
+    existingSamsung.simVariant = updateDeductionField(existingSamsung.simVariant, correctSimVariantIds);
+    existingSamsung.pta = updateDeductionField(existingSamsung.pta, correctPtaIds);
+    existingSamsung.accessories = updateDeductionField(existingSamsung.accessories, correctAccessoriesIds);
 
-            const updatedColors = await Promise.all(colorsArray.map(async (color) =>{
-                const existingColor = existingSamsung.colors.find(c => c.color === color);
-                const uploadedImage = req.files.find(file => file.fieldname === `images_${color}`);
-
-                console.log(`Processing color: ${color}, existingColor: ${existingColor ? existingColor.color : 'N/A'}`);
-
-                let imageUrl = existingColor?.image || '';
-
-                if (uploadedImage) {
-                    console.log(`Uploading image for color: ${color}`);
-                    const fileName = `${modelName.replace(/\s/g, '_')}_${color}_${uuidv4()}`;
-                    imageUrl = await uploadToCloudinary(uploadedImage, fileName);
-                    console.log(`Uploaded image for color: ${color}, URL: ${imageUrl}`);
-                }
-                return { color, image: imageUrl };
-            }));
-
-            existingSamsung.colors = updatedColors;
-        }
-
-        if (storageSizes) {
-            const storageSizesArray = Array.isArray(storageSizes) ? storageSizes : storageSizes.split(',');
-            existingSamsung.storageSizes = storageSizesArray.map(size => ({
-                size: typeof size === 'object' ? size.size : size,
-                deductionPercentage: size.deductionPercentage || 0,
-            }));
-        }
-
-        if (paymentOptions) 
-        {
-            const paymentOptionsArray = Array.isArray(paymentOptions)
-            ? paymentOptions
-            : JSON.parse(paymentOptions);
-
-            existingSamsung.paymentOptions = paymentOptionsArray.map(item => ({
-                option: item.option,
-                deductionPercentage: item.deductionPercentage || 0,
-            }));
-        }
-
-        // Update cosmetic issues
-    if (Array.isArray(cosmeticIssues)) {
-      existingSamsung.cosmeticIssues = cosmeticIssues.map(item => ({
-        header: item.header,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    // Update faults
-    if (Array.isArray(faults)) {
-      existingSamsung.faults = faults.map(item => ({
-        header: item.header,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    // Update repairs
-    if (Array.isArray(repairs)) {
-      existingSamsung.repairs = repairs.map(item => ({
-        repair: item.repair,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    // Update front screen
-    if (Array.isArray(frontScreen)) {
-      existingSamsung.frontScreen = frontScreen.map(item => ({
-        header: item.header,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    // Update back
-    if (Array.isArray(back)) {
-      existingSamsung.back = back.map(item => ({
-        header: item.header,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    // Update side
-    if (Array.isArray(side)) {
-      existingSamsung.side = side.map(item => ({
-        header: item.header,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    // Update simVariant
-    if (Array.isArray(simVariant)) {
-      existingSamsung.simVariant = simVariant.map(item => ({
-        option: item.option,
-        deductionPercentage: item.deductionPercentage || 0,
-      }));
-    }
-
-    // Update PTA
-    if (Array.isArray(pta)) {
-      existingSamsung.pta = pta.map(item => ({
-        option: item.option,
-        deductionPercentage: item.deductionPercentage || 0,
-      }));
-    }
-
-    // Update accessories
-    if (Array.isArray(accessories)) {
-      existingSamsung.accessories = accessories.map(item => ({
-        option: item.option,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    existingSamsung.cosmeticIssues = updateDeductionsIfZero(existingSamsung.cosmeticIssues, cosmeticIssues, defaultCosmeticIssues);
-    existingSamsung.faults = updateDeductionsIfZero(existingSamsung.faults, faults, defaultFaults);
-    existingSamsung.repairs = updateDeductionsIfZero(existingSamsung.repairs, repairs, defaultRepairs);
-    existingSamsung.frontScreen = updateDeductionsIfZero(existingSamsung.frontScreen, frontScreen, defaultFrontScreen);
-    existingSamsung.back = updateDeductionsIfZero(existingSamsung.back, back, defaultBack);
-    existingSamsung.side = updateDeductionsIfZero(existingSamsung.side, side, defaultSide);
-    existingSamsung.simVariant = updateDeductionsIfZero(existingSamsung.simVariant, simVariant, defaultSIMVariant);
-    existingSamsung.pta = updateDeductionsIfZero(existingSamsung.pta, pta, defaultPTA);
-    existingSamsung.accessories = updateDeductionsIfZero(existingSamsung.accessories, accessories, defaultAccessories);
-
+    // Save the updated Samsung document
     const updatedSamsung = await existingSamsung.save();
+    return res.json(updatedSamsung);  // Return the updated Samsung
 
-    res.json(updatedSamsung);
-    } catch (error) {
-        console.error('Error updating Samsung: ', error);
-        res.status(500).json({ message: 'Server Error' });
-    }
-});
-
-router.put('/:id/device-details', upload.any(), async (req, res) => {
-    try {
-        const {
-            vendor,
-            deviceType,
-            modelName,
-            maxPrice,
-            colors,
-            storageSizes,
-            paymentOptions,
-            cosmeticIssues,
-            faults,
-            repairs,
-            frontScreen,
-            back,
-            side,
-            simVariant,
-            pta,
-            accessories,
-        } = req.body;
-
-        const existingSamsung = await Samsung.findById(req.params.id);
-        if (!existingSamsung) {
-            return res.status(404).json({ error: 'Samsung Phone not found' });
-        }
-
-        console.log('Received Body: ', req.body);
-        console.log('Received Files: ', req.files);
-
-                    const defaultCosmeticIssues = [
-      { header: 'Damaged Display', condition: 'Front glass is cracked or shattered', deductionPercentage: 0 },
-      { header: 'Damaged Back', condition: 'Back glass is cracked or shattered', deductionPercentage: 0 },
-      { header: 'Damaged Camera Lens', condition: 'Camera lens is cracked or shattered', deductionPercentage: 0 },
-      { header: 'Damaged Frame', condition: 'Phone body is cracked/bent or broken', deductionPercentage: 0 }
-    ];
-
-    const paymentOptionsArray = Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]');
-    console.log('Payment Options Array: ', paymentOptionsArray);
-
-        const defaultFaults = [
-      { header: 'Faulty Display', condition: 'Dead Pixels/Spots/Lines', deductionPercentage: 0},
-      { header: 'Faulty Earpiece', condition: 'No Audio/Noisy Audio during phone calls', deductionPercentage: 0 },
-      { header: 'Faulty Face ID', condition: 'Face ID is not working or not working consistently', deductionPercentage: 0 },
-      { header: 'Faulty In-Display Fingerprint', condition: 'Fingerprint Sensor is not working or not working consistently', deductionPercentage: 0 },
-      { header: 'Faulty Proximity Sensor', condition: 'Display remains on during calls', deductionPercentage: 0 },
-      { header: 'Faulty Vibration Motor', condition: 'No Vibration/Rattling Noise', deductionPercentage: 0 },
-      { header: 'Faulty Power Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
-      { header: 'Faulty Volume Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
-      { header: 'Faulty Mute Switch', condition: 'Not Working/Not Switching', deductionPercentage: 0 },
-      { header: 'Faulty Front Camera', condition: 'Front Camera does not work, or the image is blurry', deductionPercentage: 0 },
-      { header: 'Faulty Rear Camera', condition: 'Rear Camera does not work, or the image is blurry', deductionPercentage: 0 },
-      { header: 'Faulty Flash', condition: 'Dead/Not Working', deductionPercentage: 0 },
-      { header: 'Faulty Microphone', condition: 'Not Working/Noisy', deductionPercentage: 0 },
-      { header: 'Faulty Loudspeaker', condition: 'No Audio/Noisy Audio', deductionPercentage: 0 },
-      { header: 'Faulty Charging Port', condition: 'Dead/Not Working', deductionPercentage: 0 },
-    ];
-
-    const defaultRepairs = [
-      { repair: 'Touch Screen Replaced', deductionPercentage: 0 },
-      { repair: 'Display Replaced', deductionPercentage: 0 },
-      { repair: 'Front Camera Replaced', deductionPercentage: 0 },
-      { repair: 'Back Camera Replaced', deductionPercentage: 0 },
-      { repair: 'Loudspeaker Replaced', deductionPercentage: 0 },
-      { repair: 'Earpiece Replaced', deductionPercentage: 0 },
-      { repair: 'Microphone Replaced', deductionPercentage: 0 },
-      { repair: 'Battery Replaced', deductionPercentage: 0 },
-      { repair: 'Battery Replaced by REGEN', deductionPercentage: 0 },
-      { repair: 'Motherboard Repaired', deductionPercentage: 0 },
-      { repair: 'Other Repairs', deductionPercentage: 0 }
-    ];
-
-    const defaultFrontScreen = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no deep scratches', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible scratches, swirls, 1 - 2 minor deep scratches', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, swirls, noticeable deep scratches', deductionPercentage: 0 },
-    ];
-
-    const defaultBack = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no deep scratches', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible scratches, swirls, 1 - 2 minor deep scratches', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, swirls, noticeable deep scratches', deductionPercentage: 0 },
-    ];
-
-    const defaultSide = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no scuffs or dents', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible scratches, 1 - 2 minor scuffs or dents', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, noticeable scuffs or dents', deductionPercentage: 0 },
-    ];
-
-    const defaultSIMVariant = [
-      { option: 'Dual Physical SIM', deductionPercentage: 0 },
-      { option: 'eSIM + Physical SIM', deductionPercentage: 0 }
-    ];
-
-    const defaultPTA = [
-      { option: 'Is Your Phone Official PTA Approved?', deductionPercentage: 0 },
-      { option: 'Is Your Phone CPID Approved?', deductionPercentage: 0 },
-      { option: 'Is Your Phone Patched?', deductionPercentage: 0 }      
-    ];
-
-    const defaultAccessories = [
-      { option: 'Everything (Complete Box)', deductionPercentage: 0, image: '' },
-      { option: 'Box Only', deductionPercentage: 0, image: '' },
-      { option: 'Phone Only', deductionPercentage: 0, image: '' }
-    ];
-
-        if (vendor) existingSamsung.vendor = vendor;
-        if (deviceType) existingSamsung.deviceType = deviceType;
-        if (modelName) existingSamsung.modelName = modelName;
-        if (maxPrice) existingSamsung.maxPrice = maxPrice;
-
-    const updateDeductionsIfZero = (existing = [], incoming = [], defaults = []) => {
-  if (!incoming || !Array.isArray(incoming) || incoming.length === 0) {
-    // Return existing if available, otherwise use defaults
-    return existing.length > 0 ? existing : defaults;
+  } catch (error) {
+    console.error('Error updating Samsung:', error);
+    return res.status(500).json({ message: 'Server Error' });
   }
-
-  return incoming.map((item, index) => {
-    const defaultItem = defaults[index] || {}; // Use defaults if no incoming or existing
-    const existingItem = existing[index] || {}; // Use existing data if available
-
-    return {
-      ...defaultItem,  // Default as base
-      ...existingItem,  // Preserve existing data
-      ...item,  // Override with incoming data
-      deductionPercentage: item.deductionPercentage !== undefined 
-        ? item.deductionPercentage 
-        : (existingItem.deductionPercentage !== undefined
-          ? existingItem.deductionPercentage
-          : defaultItem.deductionPercentage || 0)  // Fallback to default or zero
-    };
-  });
-};
-
-        if (colors) {
-            const colorsArray = colors.split(',');
-
-            const updatedColors = await Promise.all(colorsArray.map(async (color) =>{
-                const existingColor = existingSamsung.colors.find(c => c.color === color);
-                const uploadedImage = req.files.find(file => file.fieldname === `images_${color}`);
-
-                console.log(`Processing color: ${color}, existingColor: ${existingColor ? existingColor.color : 'N/A'}`);
-
-                let imageUrl = existingColor?.image || '';
-
-                if (uploadedImage) {
-                    console.log(`Uploading image for color: ${color}`);
-                    const fileName = `${modelName.replace(/\s/g, '_')}_${color}_${uuidv4()}`;
-                    imageUrl = await uploadToCloudinary(uploadedImage, fileName);
-                    console.log(`Uploaded image for color: ${color}, URL: ${imageUrl}`);
-                }
-                return { color, image: imageUrl };
-            }));
-
-            existingSamsung.colors = updatedColors;
-        }
-
-        if (storageSizes) {
-            const storageSizesArray = Array.isArray(storageSizes) ? storageSizes : storageSizes.split(',');
-            existingSamsung.storageSizes = storageSizesArray.map(size => ({
-                size: typeof size === 'object' ? size.size : size,
-                deductionPercentage: size.deductionPercentage || 0,
-            }));
-        }
-
-        if (paymentOptions) 
-        {
-            const paymentOptionsArray = Array.isArray(paymentOptions)
-            ? paymentOptions
-            : JSON.parse(paymentOptions);
-
-            existingSamsung.paymentOptions = paymentOptionsArray.map(item => ({
-                option: item.option,
-                deductionPercentage: item.deductionPercentage || 0,
-            }));
-        }
-
-        // Update cosmetic issues
-    if (Array.isArray(cosmeticIssues)) {
-      existingSamsung.cosmeticIssues = cosmeticIssues.map(item => ({
-        header: item.header,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    // Update faults
-    if (Array.isArray(faults)) {
-      existingSamsung.faults = faults.map(item => ({
-        header: item.header,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    // Update repairs
-    if (Array.isArray(repairs)) {
-      existingSamsung.repairs = repairs.map(item => ({
-        repair: item.repair,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    // Update front screen
-    if (Array.isArray(frontScreen)) {
-      existingSamsung.frontScreen = frontScreen.map(item => ({
-        header: item.header,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    // Update back
-    if (Array.isArray(back)) {
-      existingSamsung.back = back.map(item => ({
-        header: item.header,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    // Update side
-    if (Array.isArray(side)) {
-      existingSamsung.side = side.map(item => ({
-        header: item.header,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    // Update simVariant
-    if (Array.isArray(simVariant)) {
-      existingSamsung.simVariant = simVariant.map(item => ({
-        option: item.option,
-        deductionPercentage: item.deductionPercentage || 0,
-      }));
-    }
-
-    // Update PTA
-    if (Array.isArray(pta)) {
-      existingSamsung.pta = pta.map(item => ({
-        option: item.option,
-        deductionPercentage: item.deductionPercentage || 0,
-      }));
-    }
-
-    // Update accessories
-    if (Array.isArray(accessories)) {
-      existingSamsung.accessories = accessories.map(item => ({
-        option: item.option,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    existingSamsung.cosmeticIssues = updateDeductionsIfZero(existingSamsung.cosmeticIssues, cosmeticIssues, defaultCosmeticIssues);
-    existingSamsung.faults = updateDeductionsIfZero(existingSamsung.faults, faults, defaultFaults);
-    existingSamsung.repairs = updateDeductionsIfZero(existingSamsung.repairs, repairs, defaultRepairs);
-    existingSamsung.frontScreen = updateDeductionsIfZero(existingSamsung.frontScreen, frontScreen, defaultFrontScreen);
-    existingSamsung.back = updateDeductionsIfZero(existingSamsung.back, back, defaultBack);
-    existingSamsung.side = updateDeductionsIfZero(existingSamsung.side, side, defaultSide);
-    existingSamsung.simVariant = updateDeductionsIfZero(existingSamsung.simVariant, simVariant, defaultSIMVariant);
-    existingSamsung.pta = updateDeductionsIfZero(existingSamsung.pta, pta, defaultPTA);
-    existingSamsung.accessories = updateDeductionsIfZero(existingSamsung.accessories, accessories, defaultAccessories);
-
-    const updatedSamsung = await existingSamsung.save();
-    
-    res.json(updatedSamsung);
-    } catch (error) {
-        console.error('Error updating Samsung: ', error);
-        res.status(500).json({ message: 'Server Error' });
-    }
 });
+
+router.put('/:id/device-details', async (req, res) => {
+  try {
+    const samsungId = req.params.id;
+    const updateFields = req.body;  // Contains the updated deduction percentages for specific categories
+    console.log('Received updateFields:', updateFields);
+
+    // Fetch the Samsung document from the database
+    const fetchedSamsung = await Samsung.findById(samsungId);
+    if (!fetchedSamsung) {
+      return res.status(404).json({ message: 'Samsung not found' });
+    }
+
+    // Log the existing fetchedSamsung document for debugging
+    console.log('Existing Samsung Document:', fetchedSamsung);
+
+    // Iterate over each category (like batteryHealth, cosmeticIssues, etc.) in updateFields
+    for (const category in updateFields) {
+      if (Array.isArray(updateFields[category])) {
+        updateFields[category].forEach(updatedOption => {
+          console.log('Updating category:', category, 'with option:', updatedOption);
+
+          // Find the corresponding option in the existing fetchedSamsung document
+          const existingOption = fetchedSamsung[category].find(option => option._id.toString() === updatedOption._id.toString());
+
+          if (existingOption) {
+            // Update the deduction percentage for the matched option
+            existingOption.deductionPercentage = updatedOption.deductionPercentage;
+          }
+        });
+      }
+    }
+
+    // Save the updated fetchedSamsung document
+    await fetchedSamsung.save();
+
+    res.json(fetchedSamsung);  // Return the updated document to the frontend
+  } catch (error) {
+    console.error('Error updating Samsung details:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
 
 // Route to get all Samsung or fetch by ID
 router.get('/', async (req, res) => {
-    try {
-        const id = req.query.id;
+  try {
+    const id = req.query.id; // Get the id from query parameters
 
-        if (id) {
-            console.log(`Fetched Samsung with ID:  ${id}`);
-            const fetchedSamsung = await Samsung.findOne({ id: id });
+    if (id) {
+      console.log(`Fetching Samsung with ID: ${id}`);
 
-            if (fetchedSamsung) {
-                res.json(fetchedSamsung);
-            } else {
-                res.status(404).json({ message: 'Samsung Phone not found'});
-            }
-        } else {
-            const Samsungs = await Samsung.find();
-            res.json(Samsungs);
-        }
-    } catch (error) {
-        console.error('Error retrieving Samsung: ', error);
-        res.status(500).json({ message: 'Server Error' });
+      // Fetch Samsung data and populate the option fields with actual data by _id
+      const fetchedSamsung = await Samsung
+        .findById(id)
+        .populate('cosmeticIssues.option', 'header condition')
+        .populate('faults.option', 'header condition')
+        .populate('repairs.option', 'option')
+        .populate('frontScreen.option', 'header condition')
+        .populate('back.option', 'header condition')
+        .populate('side.option', 'header condition')
+        .populate('simVariant.option', 'option')
+        .populate('pta.option', 'option')
+        .populate('accessories.option', 'option')
+
+      console.log('Populated Samsung data:', JSON.stringify(fetchedSamsung, null, 2));
+
+      if (fetchedSamsung) {
+        res.json(fetchedSamsung);
+      } else {
+        res.status(404).json({ message: 'Samsung not found' });
+      }
+    } else {
+      // Fetch all Samsungs if no ID is provided
+      const Samsungs = await Samsung.find();
+      res.json(Samsungs);
     }
+  } catch (error) {
+    console.error('Error retrieving Samsungs:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
 });
 
 // Route to get Samsung by Model Name
 router.get('/:modelName', async (req, res) => {
-    try {
-        const modelName = req.params.modelName;
-        if (!modelName) {
-            return res.status(400).json({ message: 'Model name is required' });
-        }
+  try {
+    const modelName = req.params.modelName;
 
-        const fetchedSamsung = await Samsung.findOne({ modelName });
-        if (!fetchedSamsung) {
-            return res.status(404).json({ message: 'Samsung Not Found' });
-        }
-        res.json(fetchedSamsung);
-    } catch (error) {
-        console.error('Error retrieving Samsung: ', error);
-        res.status(500).json({ message: 'Server Error' });
+    // Fetch Samsung data and populate the option fields with actual data
+    const fetchedSamsung = await Samsung
+      .findOne({ modelName })
+      .populate('cosmeticIssues.option', 'header condition')  // Assuming header and condition are fields in CosmeticIssues
+      .populate('faults.option', 'header condition')  // Assuming header and condition are fields in Faults
+      .populate('repairs.option', 'option')  // Assuming option is the field in Repairs
+      .populate('frontScreen.option', 'header condition')  // Assuming header and condition are fields in FrontScreen
+      .populate('back.option', 'header condition')  // Assuming header and condition are fields in Back
+      .populate('side.option', 'header condition')  // Assuming header and condition are fields in Side
+      .populate('simVariant.option', 'option')  // Assuming option is the field in SIMVariant
+      .populate('pta.option', 'option')  // Assuming option is the field in PTA
+      .populate('accessories.option', 'option')  // Assuming option is the field in Accessories
+
+    if (!fetchedSamsung) {
+      return res.status(404).json({ message: 'Samsung not found' });
     }
+
+    res.json(fetchedSamsung);
+  } catch (error) {
+    console.error('Error retrieving Samsung:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
 });
 
 // Route to delete an Samsung by ID
 router.delete('/:id', async (req, res) => {
-    try {
-        const id = req.params.id;
-        const deletedSamsung = await Samsung.findByIdAndDelete(id);
-
-        if (!deletedSamsung) {
-            return res.status(404).json({ message: 'Samsung Phone Found!' });
-        }
-        res.json({ message: 'Samsung deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting Samsung: ', error);
-        res.status(500).json({ message: 'Server Error' });
-    }
+  try {
+    const id = req.params.id;
+    const deletedSamsung = await Samsung.findByIdAndDelete(id);
+    return deletedSamsung ? res.json({ message: 'Samsung deleted successfully' }) : res.status(404).json({ message: 'Samsung not found' });
+  } catch (error) {
+    console.error('Error deleting Samsung:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
 });
 
 module.exports = router;

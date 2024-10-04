@@ -27,6 +27,25 @@ app.use('/api/macbooks', require('./routes/macbookRoutes'));
 app.use('/api/watches', require('./routes/watchRoutes'));
 app.use('/api/iphone-presets', require('./routes/iphonePresetRoutes'));
 
+// Newly added routes for options
+app.use('/api/battery-health', require('./routes/batteryHealthRoutes'));
+app.use('/api/cosmetic-issues', require('./routes/cosmeticIssueRoutes'));
+app.use('/api/processor-types', require('./routes/processorRoutes'));
+app.use('/api/faults', require('./routes/faultRoutes'));
+app.use('/api/repairs', require('./routes/repairRoutes'));
+app.use('/api/front-screen', require('./routes/frontScreenRoutes'));
+app.use('/api/back', require('./routes/backRoutes'));
+app.use('/api/side', require('./routes/sideRoutes'));
+app.use('/api/body', require('./routes/bodyRoutes'));
+app.use('/api/sim-variant', require('./routes/simVariantRoutes'));
+app.use('/api/pta', require('./routes/ptaRoutes'));
+app.use('/api/accessories', require('./routes/accessoriesRoutes'));
+app.use('/api/unknown-part', require('./routes/unknownPartOptionRoutes'));
+app.use('/api/connectivity', require('./routes/connectivityRoutes'));
+app.use('/api/apple-pencil', require('./routes/applePencilRoutes'));
+app.use('/api/strap', require('./routes/strapRoutes'));
+app.use('/api/band', require('./routes/bandRoutes'));
+
 
 const PORT = process.env.PORT || 5000;
 

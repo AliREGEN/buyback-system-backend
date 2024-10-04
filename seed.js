@@ -1,14 +1,11 @@
 const mongoose = require('mongoose');
-const FrontScreen = require('./models/FrontScreen');
-const Back = require('./models/Back');
-const Side = require('./models/Side');
-const PTA = require('./models/PTA');
-const Accessories = require('./models/Accessories');
-const Repair = require('./models/Repair');
-const BatteryHealth = require('./models/BatteryHealth');
-const Faults = require('./models/Faults');
-const SIMVariant = require('./models/SIMVariant');
-const CosmeticIssues = require('./models/CosmeticIssues');
+// const FrontScreen = require('./models/frontScreenOption');
+// const Back = require('./models/backOption');
+// const Side = require('./models/sideOption');
+// const PTA = require('./models/ptaOption');
+// const Accessories = require('./models/accessoriesOption');
+// const SIMVariant = require('./models/simVariantOption');
+const ProcessorTypes = require('./models/processorOption');
 
 mongoose.connect('mongodb://localhost:27017/REGENBBAdmin', {
   useNewUrlParser: true,
@@ -19,10 +16,10 @@ const baseUrl = 'https://storage.googleapis.com/r-e-g-e-n-admin-nk6psf.appspot.c
 
 // const seedFrontScreen = async () => {
 //   const frontScreens = [
-//     { header: 'Excellent', condition: 'Very light signs of usage or 1 - 2 minor scratches', deductionPercentage: 0, image: `https://firebasestorage.googleapis.com/v0/b/r-e-g-e-n-admin-nk6psf.appspot.com/o/static%2FFaceIDNotWorking.webp?alt=media&token=944eef2f-5d83-4505-9815-1cac6fb9d362` },
-//     { header: 'Good', condition: 'Some signs of usage or a few minor scratches', deductionPercentage: 0, image: `https://firebasestorage.googleapis.com/v0/b/r-e-g-e-n-admin-nk6psf.appspot.com/o/static%2FFaceIDNotWorking.webp?alt=media&token=944eef2f-5d83-4505-9815-1cac6fb9d362` },
-//     { header: 'Fair', condition: 'Moderate signs of usage or visible scratches', deductionPercentage: 0, image: `https://firebasestorage.googleapis.com/v0/b/r-e-g-e-n-admin-nk6psf.appspot.com/o/static%2FFaceIDNotWorking.webp?alt=media&token=944eef2f-5d83-4505-9815-1cac6fb9d362` },
-//     { header: 'Acceptable', condition: 'Heavy signs of usage or deep scratches', deductionPercentage: 0, image: `https://firebasestorage.googleapis.com/v0/b/r-e-g-e-n-admin-nk6psf.appspot.com/o/static%2FFaceIDNotWorking.webp?alt=media&token=944eef2f-5d83-4505-9815-1cac6fb9d362` },
+//       { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
+//       { header: 'Good', condition: 'Some visible signs of usage, but no deep scratches', deductionPercentage: 0},
+//       { header: 'Fair', condition: 'Visible scratches, swirls, 1 - 2 minor deep scratches', deductionPercentage: 0 },
+//       { header: 'Acceptable', condition: 'Too many scratches, swirls, noticeable deep scratches', deductionPercentage: 0 },
 //   ];
 
 //   await FrontScreen.insertMany(frontScreens);
@@ -31,10 +28,10 @@ const baseUrl = 'https://storage.googleapis.com/r-e-g-e-n-admin-nk6psf.appspot.c
 
 // const seedBack = async () => {
 //   const backs = [
-//     { header: 'Excellent', condition: 'Very light signs of usage or 1 - 2 minor scratches', deductionPercentage: 0, image: `https://firebasestorage.googleapis.com/v0/b/r-e-g-e-n-admin-nk6psf.appspot.com/o/static%2FFaceIDNotWorking.webp?alt=media&token=944eef2f-5d83-4505-9815-1cac6fb9d362` },
-//     { header: 'Good', condition: 'Some signs of usage or a few minor scratches', deductionPercentage: 0, image: `https://firebasestorage.googleapis.com/v0/b/r-e-g-e-n-admin-nk6psf.appspot.com/o/static%2FFaceIDNotWorking.webp?alt=media&token=944eef2f-5d83-4505-9815-1cac6fb9d362` },
-//     { header: 'Fair', condition: 'Moderate signs of usage or visible scratches', deductionPercentage: 0, image: `https://firebasestorage.googleapis.com/v0/b/r-e-g-e-n-admin-nk6psf.appspot.com/o/static%2FFaceIDNotWorking.webp?alt=media&token=944eef2f-5d83-4505-9815-1cac6fb9d362` },
-//     { header: 'Acceptable', condition: 'Heavy signs of usage or deep scratches', deductionPercentage: 0, image: `https://firebasestorage.googleapis.com/v0/b/r-e-g-e-n-admin-nk6psf.appspot.com/o/static%2FFaceIDNotWorking.webp?alt=media&token=944eef2f-5d83-4505-9815-1cac6fb9d362` },
+//       { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
+//       { header: 'Good', condition: 'Some visible signs of usage, but no deep scratches', deductionPercentage: 0},
+//       { header: 'Fair', condition: 'Visible scratches, swirls, 1 - 2 minor deep scratches', deductionPercentage: 0 },
+//       { header: 'Acceptable', condition: 'Too many scratches, swirls, noticeable deep scratches', deductionPercentage: 0 },
 //   ];
 
 //   await Back.insertMany(backs);
@@ -43,10 +40,10 @@ const baseUrl = 'https://storage.googleapis.com/r-e-g-e-n-admin-nk6psf.appspot.c
 
 // const seedSide = async () => {
 //   const sides = [
-//     { header: 'Excellent', condition: 'Very light signs of usage or 1 - 2 minor scratches', deductionPercentage: 0, image: `https://firebasestorage.googleapis.com/v0/b/r-e-g-e-n-admin-nk6psf.appspot.com/o/static%2FFaceIDNotWorking.webp?alt=media&token=944eef2f-5d83-4505-9815-1cac6fb9d362` },
-//     { header: 'Good', condition: 'Some signs of usage or a few minor scratches', deductionPercentage: 0, image: `https://firebasestorage.googleapis.com/v0/b/r-e-g-e-n-admin-nk6psf.appspot.com/o/static%2FFaceIDNotWorking.webp?alt=media&token=944eef2f-5d83-4505-9815-1cac6fb9d362` },
-//     { header: 'Fair', condition: 'Moderate signs of usage or visible scratches', deductionPercentage: 0, image: `https://firebasestorage.googleapis.com/v0/b/r-e-g-e-n-admin-nk6psf.appspot.com/o/static%2FFaceIDNotWorking.webp?alt=media&token=944eef2f-5d83-4505-9815-1cac6fb9d362` },
-//     { header: 'Acceptable', condition: 'Heavy signs of usage or deep scratches', deductionPercentage: 0, image: `https://firebasestorage.googleapis.com/v0/b/r-e-g-e-n-admin-nk6psf.appspot.com/o/static%2FFaceIDNotWorking.webp?alt=media&token=944eef2f-5d83-4505-9815-1cac6fb9d362` },
+//       { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
+//       { header: 'Good', condition: 'Some visible signs of usage, but no scuffs or dents', deductionPercentage: 0},
+//       { header: 'Fair', condition: 'Visible scratches, 1 - 2 minor scuffs or dents', deductionPercentage: 0 },
+//       { header: 'Acceptable', condition: 'Too many scratches, noticeable scuffs or dents', deductionPercentage: 0 },
 //   ];
 
 //   await Side.insertMany(sides);
@@ -65,8 +62,8 @@ const baseUrl = 'https://storage.googleapis.com/r-e-g-e-n-admin-nk6psf.appspot.c
 
 // const seedPTA = async () => {
 //   const ptaOptions = [
-//     { option: 'Is your iPhone PTA Approved?', deductionPercentage: 30 },
-//     { option: 'Is your iPhone Factory Unlocked?', deductionPercentage: 15 },
+//     { option: 'Is Your iPhone PTA Approved?', deductionPercentage: 30 },
+//     { option: 'Is Your iPhone Factory Unlocked?', deductionPercentage: 15 },
     
 //   ];
 
@@ -85,16 +82,48 @@ const baseUrl = 'https://storage.googleapis.com/r-e-g-e-n-admin-nk6psf.appspot.c
 //   await SIMVariant.insertMany(simOptions);
 //   console.log('SIM options seeded!');
 // };
-// const seedAccessories = async () => {
-//   const accessoriesOptions = [
-//     { option: 'Everything (Complete Box)', deductionPercentage: 0, image: `${baseUrl}OriginalCharger.webp` },
-//     { option: 'Box Only', deductionPercentage: 0, image: `${baseUrl}BoxWithSameIMEI.webp` },
-//     { option: 'iPhone Only', deductionPercentage: 0, image: `${baseUrl}VibratorNotWorking.webp` },
-//   ];
 
-//   await Accessories.insertMany(accessoriesOptions);
-//   console.log('Accessories options seeded!');
-// };
+const seedProcessorTypes = async () => {
+  const processorOptions = [
+    // MacBook Air (2020)
+    { type: 'Apple M1', cpuCores: '8-core CPU', gpuCores: '8-core GPU', speed: '' },
+    { type: 'Apple M1', cpuCores: '8-core CPU', gpuCores: '7-core GPU', speed: '' },
+    { type: 'Intel Core i7', cpuCores: 'Quad-Core', gpuCores: 'Intel Iris Plus', speed: '1.2GHz' },
+    { type: 'Intel Core i5', cpuCores: 'Quad-Core', gpuCores: 'Intel Iris Plus', speed: '1.1GHz' },
+    { type: 'Intel Core i3', cpuCores: 'Dual-Core', gpuCores: 'Intel Iris Plus', speed: '1.1GHz' },
+
+    // MacBook Pro 13-inch (2020)
+    { type: 'Apple M1', cpuCores: '8-core CPU', gpuCores: '8-core GPU', speed: '' },
+    { type: 'Intel Core i7', cpuCores: 'Quad-Core', gpuCores: 'Intel Iris Plus', speed: '2.3GHz' },
+    { type: 'Intel Core i5', cpuCores: 'Quad-Core', gpuCores: 'Intel Iris Plus', speed: '2.0GHz' },
+
+    // MacBook Pro 16-inch (2021)
+    { type: 'Apple M1 Max', cpuCores: '10-core CPU', gpuCores: '32-core GPU', speed: '' },
+    { type: 'Apple M1 Max', cpuCores: '10-core CPU', gpuCores: '24-core GPU', speed: '' },
+    { type: 'Apple M1 Pro', cpuCores: '10-core CPU', gpuCores: '16-core GPU', speed: '' },
+
+    // MacBook Air (2022)
+    { type: 'Apple M2', cpuCores: '8-core CPU', gpuCores: '10-core GPU', speed: '' },
+    { type: 'Apple M2', cpuCores: '8-core CPU', gpuCores: '8-core GPU', speed: '' },
+
+    // MacBook Pro 13-inch (2022)
+    { type: 'Apple M2', cpuCores: '8-core CPU', gpuCores: '10-core GPU', speed: '' },
+
+    // MacBook Pro 14-inch (2023)
+    { type: 'Apple M2 Max', cpuCores: '12-core CPU', gpuCores: '38-core GPU', speed: '' },
+    { type: 'Apple M2 Max', cpuCores: '12-core CPU', gpuCores: '30-core GPU', speed: '' },
+    { type: 'Apple M2 Pro', cpuCores: '10-core CPU', gpuCores: '16-core GPU', speed: '' },
+
+    // MacBook Pro 16-inch (2023)
+    { type: 'Apple M2 Max', cpuCores: '12-core CPU', gpuCores: '38-core GPU', speed: '' },
+    { type: 'Apple M2 Max', cpuCores: '12-core CPU', gpuCores: '30-core GPU', speed: '' },
+    { type: 'Apple M2 Pro', cpuCores: '12-core CPU', gpuCores: '19-core GPU', speed: '' }
+  ];
+
+  await ProcessorTypes.insertMany(processorOptions);
+  console.log('Processor options seeded!');
+};
+
 
 // const seedRepair = async () => {
 //   const RepairOptions = [
@@ -126,14 +155,14 @@ const baseUrl = 'https://storage.googleapis.com/r-e-g-e-n-admin-nk6psf.appspot.c
 //   console.log('Battery Health options seeded!');
 // };
 
-const seedFaults = async () => {
-  const faultOptions = [
-    { header: 'Faulty Loudspeaker', condition: 'Loudspeaker is not working or the audio is noisy', deductionPercentage: 0, image: `https://firebasestorage.googleapis.com/v0/b/r-e-g-e-n-admin-nk6psf.appspot.com/o/static%2FProximitySensorNotWorking.webp?alt=media&token=550472d9-166a-4608-8247-74bfc433e2bc` },
-  ];
+// const seedFaults = async () => {
+//   const faultOptions = [
+//     { header: 'Faulty Loudspeaker', condition: 'Loudspeaker is not working or the audio is noisy', deductionPercentage: 0, image: `https://firebasestorage.googleapis.com/v0/b/r-e-g-e-n-admin-nk6psf.appspot.com/o/static%2FProximitySensorNotWorking.webp?alt=media&token=550472d9-166a-4608-8247-74bfc433e2bc` },
+//   ];
 
-  await Faults.insertMany(faultOptions);
-  console.log('Fault options seeded!');
-};
+//   await Faults.insertMany(faultOptions);
+//   console.log('Fault options seeded!');
+// };
 
 // const seedCosmeticIssues = async () => {
 //   const cosmeticIssuesOptions = [
@@ -154,10 +183,12 @@ const seedDatabase = async () => {
   // await seedBentOrLoosen();
   // await seedSIMVariant();
   // await seedAccessories();
+  // await seedPTA();
   // await seedRepair();
   // await seedBatteryHealth();
-  await seedFaults();
+  // await seedFaults();
   // await seedCosmeticIssues();
+  await seedProcessorTypes();
   mongoose.connection.close();
 };
 

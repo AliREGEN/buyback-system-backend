@@ -1,9 +1,19 @@
+const mongoose = require('mongoose');
 const iPad = require('../models/iPad');
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
 const cloudinary = require('../config/cloudinary');
+const BatteryHealth = require('../models/batteryHealthOption');
+const CosmeticIssues = require('../models/cosmeticIssueOption');
+const Connectivity = require('../models/connectivityOption');
+const Faults = require('../models/faultOption');
+const Repairs = require('../models/repairOption');
+const FrontScreen = require('../models/frontScreenOption');
+const Body = require('../models/bodyOption');
+const ApplePencil = require('../models/applePencilOption');
+const Accessories = require('../models/accessoriesOption');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -26,891 +36,413 @@ const uploadToCloudinary = (file, fileName) => {
     });
 };
 
+// Helper function to safely parse JSON fields
+const safeParse = (value) => {
+  try {
+    if (!value || value === 'undefined') {
+      return []; // Return an empty array for undefined or invalid input
+    }
+    return JSON.parse(value); // Parse if it's a valid JSON string
+  } catch (error) {
+    console.error('Error parsing JSON:', error);
+    return []; // Return an empty array in case of error
+  }
+};
+
+const fetchOptions = async () => {
+  const batteryHealthOptions = await BatteryHealth.find();
+  const cosmeticIssuesOptions = await CosmeticIssues.find();
+  const connectivityOptions = await Connectivity.find();
+  const applePencilOptions = await ApplePencil.find();
+  const faultsOptions = await Faults.find();
+  const repairsOptions = await Repairs.find();
+  const frontScreenOptions = await FrontScreen.find();
+  const bodyOptions = await Body.find();
+  const accessoriesOptions = await Accessories.find();
+
+  return {
+    batteryHealthOptions,
+    cosmeticIssuesOptions,
+    connectivityOptions,
+    faultsOptions,
+    repairsOptions,
+    frontScreenOptions,
+    bodyOptions,
+    accessoriesOptions,
+    applePencilOptions,
+  };
+};
+
+const mapDynamicOptions = (parsedArray, optionsArray) => {
+  return parsedArray.map((item) => {
+    const matchedOption = optionsArray.find(
+      (opt) => opt._id.toString() === item.toString()  // Ensure ObjectId comparison consistency
+    );
+    if (matchedOption) {
+      console.log(`Matched Option: ${matchedOption._id} for Parsed Item: ${item}`);
+    } else {
+      console.log(`No match found for Parsed Item: ${item}`);
+    }
+    return matchedOption ? matchedOption._id : null;
+  }).filter(Boolean);  // Filter null or undefined results
+};
+
 router.post('/', upload.any(), async (req, res) => {
-    try {
-        console.log('Received Body: ', req.body)
-        console.log('Received Files: ', req.files)
+  try {
+    // Fetch options dynamically from their respective collections
+    const options = await fetchOptions();
 
-        const {vendor, deviceType, modelName, maxPrice, colors, storageSizes, paymentOptions } = req.body;
+    // Log options fetched from collections for debugging
+    console.log('Available options:', options);
 
-        const colorsArray = colors ? colors.split(',') : [];
-        const storageSizesArray = storageSizes ? storageSizes.split(',') : [];
+    const {
+      vendor, deviceType, modelName, maxPrice, colors, storageSizes, paymentOptions,
+      batteryHealth, connectivity, cosmeticIssues, faults, repairs, frontScreen, body, applePencil ,accessories,
+    } = req.body;
 
-        let colorImageArray = [];
+    // Parsing the passed data, only if values exist
+    const parsedBatteryHealth = batteryHealth ? safeParse(batteryHealth) : [];
+    const parsedCosmeticIssues = cosmeticIssues ? safeParse(cosmeticIssues) : [];
+    const parsedConnectivity = connectivity ? safeParse(connectivity) : [];
+    const parsedFaults = faults ? safeParse(faults) : [];
+    const parsedRepairs = repairs ? safeParse(repairs) : [];
+    const parsedFrontScreen = frontScreen ? safeParse(frontScreen) : [];
+    const parsedBody = body ? safeParse(body) : [];
+    const parsedAccessories = accessories ? safeParse(accessories) : [];
+    const parsedApplePencil = applePencil ? safeParse(applePencil) : [];
 
-        if (req.files && req.files.length) {
-            for (let i = 0; i < req.files.length; i++) {
-                const colorName = colorsArray[i];
-                const file = req.files[i];
-                const fileName = `${modelName.replace(/\s/g, '_')}_${colorName}_${uuidv4()}`;
+    // Log parsed data for debugging
+    console.log('Parsed Battery Health:', parsedBatteryHealth);
+    console.log('Parsed Cosmetic Issues:', parsedCosmeticIssues);
+    console.log('Parsed Connectivity:', parsedConnectivity);
+    console.log('Parsed Faults:', parsedFaults);
+    console.log('Parsed Repairs:', parsedRepairs);
+    console.log('Parsed Front Screen:', parsedFrontScreen);
+    console.log('Parsed Body:', parsedBody);
+    console.log('Parsed Apple Pencil:', parsedApplePencil);
+    console.log('Parsed Accessories:', parsedAccessories);
 
-                const imageUrl = await uploadToCloudinary(file, fileName);
-                colorImageArray.push({ color: colorName, image: imageUrl });
-            }
-        } else {
-            colorImageArray = colorsArray.map((color) => ({
-                color,
-                image: null,
-            }));
-        }
+    // Mapping the parsed data to correct ObjectIds, only if the field exists
+    const correctBatteryHealthIds = parsedBatteryHealth.length ? mapDynamicOptions(parsedBatteryHealth, options.batteryHealthOptions) : [];
+    const correctCosmeticIssueIds = parsedCosmeticIssues.length ? mapDynamicOptions(parsedCosmeticIssues, options.cosmeticIssuesOptions) : [];
+    const correctConnectivityIds = parsedConnectivity.length ? mapDynamicOptions(parsedConnectivity, options.connectivityOptions) : [];
+    const correctFaultIds = parsedFaults.length ? mapDynamicOptions(parsedFaults, options.faultsOptions) : [];
+    const correctRepairIds = parsedRepairs.length ? mapDynamicOptions(parsedRepairs, options.repairsOptions) : [];
+    const correctFrontScreenIds = parsedFrontScreen.length ? mapDynamicOptions(parsedFrontScreen, options.frontScreenOptions) : [];
+    const correctBodyIds = parsedBody.length ? mapDynamicOptions(parsedBody, options.bodyOptions) : [];
+    const correctAccessoriesIds = parsedAccessories.length ? mapDynamicOptions(parsedAccessories, options.accessoriesOptions) : [];
+    const correctApplePencilIds = parsedApplePencil.length ? mapDynamicOptions(parsedApplePencil, options.applePencilOptions) : [];
 
+    // Log mapped IDs for debugging
+    console.log("Correct Fault Ids: ", correctFaultIds);
+    console.log("Correct Cosmetic Issue Ids: ", correctCosmeticIssueIds);
+    console.log("Correct Battery Health Ids: ", correctBatteryHealthIds);
+    console.log("Correct Connectivity Ids: ", correctConnectivityIds);
+    console.log("Correct Repair Ids: ", correctRepairIds);
+    console.log("Correct Front Screen Ids: ", correctFrontScreenIds);
+    console.log("Correct Body Ids: ", correctBodyIds);
+    console.log("Correct Accessories Ids: ", correctAccessoriesIds);
+    console.log("Correct Apple Pencil Ids: ", correctApplePencilIds);
 
-    // Filter battery health based on iPad modelName
-const filterBatteryHealthOptionsForiPads = (modelName) => {
-  const allOptions = [
-    { health: '95% or Above', deductionPercentage: 0 },
-    { health: '90% or Above', deductionPercentage: 0 },
-    { health: '85% or Above', deductionPercentage: 0 },
-    { health: '80% or Above', deductionPercentage: 0 },
-    { health: 'Less than 80%', deductionPercentage: 0 },
-  ];
+    const colorsArray = colors ? colors.split(',') : [];
+    const storageSizesArray = storageSizes ? storageSizes.split(',') : [];
+    let colorImageArray = [];
 
-  if (['iPad - 10th Generation (2022)', 'iPad Air - 5th Generation (2022)', 'iPad Pro 11-inch - 4th Generation (2022)'].includes(modelName)) {
-    return allOptions.filter((option) => ['95% or Above', '90% or Above', '85% or Above'].includes(option.health));
-  } else if (['iPad - 9th Generation (2021)', 'iPad mini - 6th Generation (2021)', 'iPad Pro 12.9-inch - 5th Generation (2021)'].includes(modelName)) {
-    return allOptions.filter((option) => ['90% or Above', '85% or Above', '80% or Above'].includes(option.health));
-  } else {
-    return allOptions.filter((option) => ['85% or Above', '80% or Above', 'Less than 80%'].includes(option.health));
-  }
-};
+    // Image handling
+    if (req.files && req.files.length) {
+      for (let i = 0; i < req.files.length; i++) {
+        const colorName = colorsArray[i];
+        const file = req.files[i];
+        const fileName = `${modelName.replace(/\s/g, '_')}_${colorName}_${uuidv4()}`;
+        const imageUrl = await uploadToCloudinary(file, fileName);
+        colorImageArray.push({ color: colorName, image: imageUrl });
+      }
+    } else {
+      colorImageArray = colorsArray.map((color) => ({
+        color,
+        image: null,
+      }));
+    }
 
-// Apply the filtered battery health options based on the iPad model name
-const iPadBatteryHealthOptions = filterBatteryHealthOptionsForiPads(modelName);
-
-
-    const defaultCosmeticIssues = [
-      { header: 'Damaged Display', condition: 'Front glass is cracked or shattered', deductionPercentage: 0 },
-      { header: 'Damaged Body', condition: 'Body is bent/broken or heavily dented', deductionPercentage: 0 },
-      { header: 'Damaged Camera Lens', condition: 'Camera lens is cracked or shattered', deductionPercentage: 0 },
-    ];
-
-    const paymentOptionsArray = Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]');
-    console.log('Payment Options Array: ', paymentOptionsArray);
-
-    // Function to filter out Faulty Face ID based on the model name
-const filterFaultsForiPads = (modelName) => {
-  const allFaults = [
-      { header: 'Faulty Display', condition: 'Dead Pixels/Spots/Lines', deductionPercentage: 0},
-      { header: 'Faulty Face ID', condition: 'Face ID is not working or not working consistently', deductionPercentage: 0 },
-      { header: 'Faulty Vibration Motor', condition: 'No Vibration/Rattling Noise', deductionPercentage: 0 },
-      { header: 'Faulty Power Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
-      { header: 'Faulty Volume Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
-      { header: 'Faulty Mute Switch', condition: 'Not Working/Not Switching', deductionPercentage: 0 },
-      { header: 'Faulty Front Camera', condition: 'Front Camera does not work, or the image is blurry', deductionPercentage: 0 },
-      { header: 'Faulty Rear Camera', condition: 'Rear Camera does not work, or the image is blurry', deductionPercentage: 0 },
-      { header: 'Faulty Flash', condition: 'Dead/Not Working', deductionPercentage: 0 },
-      { header: 'Faulty Microphone', condition: 'Not Working/Noisy', deductionPercentage: 0 },
-      { header: 'Faulty Loudspeaker', condition: 'No Audio/Noisy Audio', deductionPercentage: 0 },
-      { header: 'Faulty Charging Port', condition: 'Dead/Not Working', deductionPercentage: 0 },
-  ];
-
-  // Exclude Faulty Face ID for certain iPad models
-  if (['iPad - 9th Generation (2021)',
-    'iPad mini - 6th Generation (2021)',
-    'iPad Pro 12.9-inch - 5th Generation (2021)',
-    'iPad Air - 5th Generation (2022)'].includes(modelName)) {
-    return allFaults.filter((fault) => fault.header !== 'Faulty Face ID');
-  }
-
-  // Return all faults if the model is not in the list
-  return allFaults;
-};
-
-// Apply the filtered faults based on the iPad model name
-const iPadFaultsOptions = filterFaultsForiPads(modelName);
-
-
-    const defaultRepairs = [
-      { repair: 'Touch Screen Replaced', deductionPercentage: 0 },
-      { repair: 'Display Replaced', deductionPercentage: 0 },
-      { repair: 'Front Camera Replaced', deductionPercentage: 0 },
-      { repair: 'Back Camera Replaced', deductionPercentage: 0 },
-      { repair: 'Loudspeaker Replaced', deductionPercentage: 0 },
-      { repair: 'Earpiece Replaced', deductionPercentage: 0 },
-      { repair: 'Microphone Replaced', deductionPercentage: 0 },
-      { repair: 'Battery Replaced', deductionPercentage: 0 },
-      { repair: 'Battery Replaced by REGEN', deductionPercentage: 0 },
-      { repair: 'Motherboard Repaired', deductionPercentage: 0 },
-      { repair: 'Other Repairs', deductionPercentage: 0 }
-    ];
-
-    const defaultFrontScreen = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no deep scratches', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible scratches, swirls, 1 - 2 minor deep scratches', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, swirls, noticeable deep scratches', deductionPercentage: 0 },
-    ];
-
-    const defaultBody = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no scuffs or dents', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible scratches, 1 - 2 minor scuffs or dents', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, noticeable scuffs or dents', deductionPercentage: 0 },
-    ];
-
-    const defaultAccessories = [
-      { option: 'Everything (Complete Box)', deductionPercentage: 0, image: '' },
-      { option: 'Box Only', deductionPercentage: 0, image: '' },
-      { option: 'iPad Only', deductionPercentage: 0, image: '' }
-    ];
-
-    const defaultApplePencil = [
-    { generation: '1st Generation', header: 'Excellent', condition: 'Almost like new with no visible signs of wear.', deductionPercentage: 0 },
-    { generation: '1st Generation', header: 'Good', condition: 'Some minor signs of use such as small scratches.', deductionPercentage: 0 },
-    { generation: '1st Generation', header: 'Fair', condition: 'Visible signs of use with noticeable scratches or marks.', deductionPercentage: 0 },
-    { generation: '1st Generation', header: 'Acceptable', condition: 'Heavily used with clear signs of wear, possibly with functional defects.', deductionPercentage: 0 },
-    { generation: '2nd Generation', header: 'Excellent', condition: 'Almost like new with no visible signs of wear.', deductionPercentage: 0 },
-    { generation: '2nd Generation', header: 'Good', condition: 'Some minor signs of use such as small scratches.', deductionPercentage: 0 },
-    { generation: '2nd Generation', header: 'Fair', condition: 'Visible signs of use with noticeable scratches or marks.', deductionPercentage: 0 },
-    { generation: '2nd Generation', header: 'Acceptable', condition: 'Heavily used with clear signs of wear, possibly with functional defects.', deductionPercentage: 0 }
-];
-
-    const defaultConnectivity = [
-        { option: 'WiFi + Cellular', deductionPercentage: 0 },
-        { option: 'WiFi Only', deductionPercentage: 0 },
-    ];
-
-    const defaultPTA = [
-      { option: 'Is Your iPad PTA Approved?', deductionPercentage: 0 },
-      { option: 'Is Your iPad Factory Unlocked?', deductionPercentage: 0 }
-    ];
-
+    // Create new iPad document with correct ObjectIDs
     const newiPad = new iPad({
-        id: uuidv4(),
-        vendor,
-        deviceType,
-        modelName,
-        maxPrice,
-        colors: colorImageArray,
-        storageSizes: storageSizesArray.map(size => ({
-            size: size,
-            deductionPercentage: 0,
-        })),
-        paymentOptions: paymentOptionsArray,
-        batteryHealth: iPadBatteryHealthOptions,
-        cosmeticIssues: defaultCosmeticIssues,
-        faults: iPadFaultsOptions,
-        repairs: defaultRepairs,
-        frontScreen: defaultFrontScreen,
-        body: defaultBody,
-        accessories: defaultAccessories,
-        applePencil: defaultApplePencil,
-        connectivity: defaultConnectivity,
-        pta: defaultPTA
+      id: uuidv4(),
+      vendor,
+      deviceType,
+      modelName,
+      maxPrice,
+      colors: colorImageArray,
+      storageSizes: storageSizesArray.map(size => ({
+        size,
+        deductionPercentage: 0,
+      })),
+      paymentOptions: Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]'),
+      batteryHealth: correctBatteryHealthIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      cosmeticIssues: correctCosmeticIssueIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      faults: correctFaultIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      repairs: correctRepairIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      frontScreen: correctFrontScreenIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      body: correctBodyIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      accessories: correctAccessoriesIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      applePencil: correctApplePencilIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
     });
 
+    // Save the new iPad document
     await newiPad.save();
-    console.log('New iPad Created: ', newiPad);
+    console.log('New iPad saved to MongoDB:', newiPad);
     return res.status(201).json(newiPad);
-    } catch (error) {
-        console.error('Error in creating new iPad: ', error);
-        return res.status(500).json({ error: 'Internal Server Error' });
-    }
+
+  } catch (error) {
+    console.error('Error adding iPad:', error);
+    return res.status(500).json({ message: 'Server Error' });
+  }
 });
 
 // Update iPad fields
-router.put('/:id/device-management', upload.any(), async(req, res) => {
-    try {
-        const {
-            vendor,
-            deviceType,
-            modelName,
-            maxPrice,
-            colors,
-            storageSizes,
-            paymentOptions,
-            batteryHealth,
-            cosmeticIssues,
-            faults,
-            repairs,
-            frontScreen,
-            body,
-            accessories,
-            pta,
-            applePencil,
-            connectivity,
-        } = req.body;
+router.put('/:id', upload.any(), async (req, res) => {
+  try {
+    // Fetch options dynamically from their respective collections
+    const options = await fetchOptions();
 
-        const existingIPad = await iPad.findById(req.params.id);
-        if (!existingIPad) {
-            return res.status(404).json({ error: 'iPad not found' });
+    const {
+      vendor, deviceType, modelName, maxPrice, colors, storageSizes, paymentOptions,
+      batteryHealth, cosmeticIssues, connectivity , faults, repairs, frontScreen, body, accessories, applePencil,
+    } = req.body;
+
+    // Find the existing iPad document
+    const existingiPad = await iPad.findById(req.params.id);
+    if (!existingiPad) {
+      return res.status(404).json({ message: 'iPad not found' });
+    }
+
+    // Parsing the passed data, only if values exist
+    const parsedBatteryHealth = batteryHealth ? safeParse(batteryHealth) : existingiPad.batteryHealth.map(opt => opt.option);
+    const parsedCosmeticIssues = cosmeticIssues ? safeParse(cosmeticIssues) : existingiPad.cosmeticIssues.map(opt => opt.option);
+    const parsedConnectivity = connectivity ? safeParse(connectivity) : existingiPad.connectivity.map(opt => opt.option);
+    const parsedFaults = faults ? safeParse(faults) : existingiPad.faults.map(opt => opt.option);
+    const parsedRepairs = repairs ? safeParse(repairs) : existingiPad.repairs.map(opt => opt.option);
+    const parsedFrontScreen = frontScreen ? safeParse(frontScreen) : existingiPad.frontScreen.map(opt => opt.option);
+    const parsedBody = body ? safeParse(body) : existingiPad.body.map(opt => opt.option);
+    const parsedAccessories = accessories ? safeParse(accessories) : existingiPad.accessories.map(opt => opt.option);
+    const parsedApplePencil = applePencil ? safeParse(applePencil) : existingiPad.applePencil.map(opt => opt.option);
+
+    // Mapping the parsed data to correct ObjectIds, only if the field exists
+    const correctBatteryHealthIds = parsedBatteryHealth.length ? mapDynamicOptions(parsedBatteryHealth, options.batteryHealthOptions) : existingiPad.batteryHealth.map(opt => opt.option);
+    const correctCosmeticIssueIds = parsedCosmeticIssues.length ? mapDynamicOptions(parsedCosmeticIssues, options.cosmeticIssuesOptions) : existingiPad.cosmeticIssues.map(opt => opt.option);
+    const correctConnectivityIds = parsedConnectivity.length ? mapDynamicOptions(parsedConnectivity, options.connectivityOptions) : existingiPad.connectivity.map(opt => opt.option);
+    const correctFaultIds = parsedFaults.length ? mapDynamicOptions(parsedFaults, options.faultsOptions) : existingiPad.faults.map(opt => opt.option);
+    const correctRepairIds = parsedRepairs.length ? mapDynamicOptions(parsedRepairs, options.repairsOptions) : existingiPad.repairs.map(opt => opt.option);
+    const correctFrontScreenIds = parsedFrontScreen.length ? mapDynamicOptions(parsedFrontScreen, options.frontScreenOptions) : existingiPad.frontScreen.map(opt => opt.option);
+    const correctBodyIds = parsedBody.length ? mapDynamicOptions(parsedBody, options.bodyOptions) : existingiPad.body.map(opt => opt.option);
+    const correctAccessoriesIds = parsedAccessories.length ? mapDynamicOptions(parsedAccessories, options.accessoriesOptions) : existingiPad.accessories.map(opt => opt.option);
+    const correctApplePencilIds = parsedApplePencil.length ? mapDynamicOptions(parsedApplePencil, options.applePencilOptions) : existingiPad.applePencil.map(opt => opt.option);
+
+    // Log mapped IDs for debugging
+    console.log("Correct Fault Ids: ", correctFaultIds);
+    console.log("Correct Cosmetic Issue Ids: ", correctCosmeticIssueIds);
+    console.log("Correct Connectivity Ids: ", correctConnectivityIds);
+    console.log("Correct Battery Health Ids: ", correctBatteryHealthIds);
+    console.log("Correct Repair Ids: ", correctRepairIds);
+    console.log("Correct Front Screen Ids: ", correctFrontScreenIds);
+    console.log("Correct Body Ids: ", correctBodyIds);
+    console.log("Correct Accessories Ids: ", correctAccessoriesIds);
+    console.log("Correct Apple Pencil Ids: ", correctApplePencilIds);
+
+    if (vendor) {
+      existingiPad.vendor = vendor;
+    }
+    if (deviceType) {
+      existingiPad.deviceType = deviceType;
+    }
+    if (modelName) {
+      existingiPad.modelName = modelName;
+    }
+    if (maxPrice) {
+      existingiPad.maxPrice = maxPrice;
+    }
+
+    // Handle colors and image uploads
+    if (colors) {
+      const colorsArray = colors.split(',');
+      const updatedColors = await Promise.all(colorsArray.map(async (color) => {
+        const existingColor = existingiPad.colors.find(c => c.color === color);
+        const uploadedImage = req.files.find(file => file.fieldname === `images_${color}`);
+        let imageUrl = existingColor?.image || '';
+        if (uploadedImage) {
+          const fileName = `${modelName.replace(/\s/g, '_')}_${color}_${uuidv4()}`;
+          imageUrl = await uploadToCloudinary(uploadedImage, fileName);
         }
+        return { color, image: imageUrl };
+      }));
+      existingiPad.colors = updatedColors;
+    }
 
-        console.log('Received Body: ', req.body);
-        console.log('Received Files: ', req.files);
+    // Handle storage sizes
+    if (storageSizes) {
+      const storageSizesArray = Array.isArray(storageSizes) ? storageSizes : storageSizes.split(',');
+      existingiPad.storageSizes = storageSizesArray.map(size => ({
+        size,
+        deductionPercentage: 0,
+      }));
+    }
 
-        const filterBatteryHealthOptionsForiPads = (modelName) => {
-  const allOptions = [
-    { health: '95% or Above', deductionPercentage: 0 },
-    { health: '90% or Above', deductionPercentage: 0 },
-    { health: '85% or Above', deductionPercentage: 0 },
-    { health: '80% or Above', deductionPercentage: 0 },
-    { health: 'Less than 80%', deductionPercentage: 0 },
-  ];
+    if (paymentOptions) {
+      existingiPad.paymentOptions = Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]');
+    }
 
-  if (['iPad - 10th Generation (2022)', 'iPad Air - 5th Generation (2022)', 'iPad Pro 11-inch - 4th Generation (2022)'].includes(modelName)) {
-    return allOptions.filter((option) => ['95% or Above', '90% or Above', '85% or Above'].includes(option.health));
-  } else if (['iPad - 9th Generation (2021)', 'iPad mini - 6th Generation (2021)', 'iPad Pro 12.9-inch - 5th Generation (2021)'].includes(modelName)) {
-    return allOptions.filter((option) => ['90% or Above', '85% or Above', '80% or Above'].includes(option.health));
-  } else {
-    return allOptions.filter((option) => ['85% or Above', '80% or Above', 'Less than 80%'].includes(option.health));
-  }
-};
-
-// Apply the filtered battery health options based on the iPad model name
-const iPadBatteryHealthOptions = filterBatteryHealthOptionsForiPads(modelName);
-
-
-    const defaultCosmeticIssues = [
-      { header: 'Damaged Display', condition: 'Front glass is cracked or shattered', deductionPercentage: 0 },
-      { header: 'Damaged Body', condition: 'Body is bent/broken or heavily dented', deductionPercentage: 0 },
-      { header: 'Damaged Camera Lens', condition: 'Camera lens is cracked or shattered', deductionPercentage: 0 },
-    ];
-
-    const paymentOptionsArray = Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]');
-    console.log('Payment Options Array: ', paymentOptionsArray);
-
-    // Function to filter out Faulty Face ID based on the model name
-const filterFaultsForiPads = (modelName) => {
-  const allFaults = [
-      { header: 'Faulty Display', condition: 'Dead Pixels/Spots/Lines', deductionPercentage: 0},
-      { header: 'Faulty Earpiece', condition: 'No Audio/Noisy Audio during phone calls', deductionPercentage: 0 },
-      { header: 'Faulty Face ID', condition: 'Face ID is not working or not working consistently', deductionPercentage: 0 },
-      { header: 'Faulty Proximity Sensor', condition: 'Display remains on during calls', deductionPercentage: 0 },
-      { header: 'Faulty Vibration Motor', condition: 'No Vibration/Rattling Noise', deductionPercentage: 0 },
-      { header: 'Faulty Power Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
-      { header: 'Faulty Volume Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
-      { header: 'Faulty Mute Switch', condition: 'Not Working/Not Switching', deductionPercentage: 0 },
-      { header: 'Faulty Front Camera', condition: 'Front Camera does not work, or the image is blurry', deductionPercentage: 0 },
-      { header: 'Faulty Rear Camera', condition: 'Rear Camera does not work, or the image is blurry', deductionPercentage: 0 },
-      { header: 'Faulty Flash', condition: 'Dead/Not Working', deductionPercentage: 0 },
-      { header: 'Faulty Microphone', condition: 'Not Working/Noisy', deductionPercentage: 0 },
-      { header: 'Faulty Loudspeaker', condition: 'No Audio/Noisy Audio', deductionPercentage: 0 },
-      { header: 'Faulty Charging Port', condition: 'Dead/Not Working', deductionPercentage: 0 },
-  ];
-
-  // Exclude Faulty Face ID for certain iPad models
-  if (['iPad - 9th Generation (2021)',
-    'iPad mini - 6th Generation (2021)',
-    'iPad Pro 12.9-inch - 5th Generation (2021)',
-    'iPad Air - 5th Generation (2022)'].includes(modelName)) {
-    return allFaults.filter((fault) => fault.header !== 'Faulty Face ID');
-  }
-
-  // Return all faults if the model is not in the list
-  return allFaults;
-};
-
-// Apply the filtered faults based on the iPad model name
-const iPadFaultsOptions = filterFaultsForiPads(modelName);
-
-
-    const defaultRepairs = [
-      { repair: 'Touch Screen Replaced', deductionPercentage: 0 },
-      { repair: 'Display Replaced', deductionPercentage: 0 },
-      { repair: 'Front Camera Replaced', deductionPercentage: 0 },
-      { repair: 'Back Camera Replaced', deductionPercentage: 0 },
-      { repair: 'Loudspeaker Replaced', deductionPercentage: 0 },
-      { repair: 'Earpiece Replaced', deductionPercentage: 0 },
-      { repair: 'Microphone Replaced', deductionPercentage: 0 },
-      { repair: 'Battery Replaced', deductionPercentage: 0 },
-      { repair: 'Battery Replaced by REGEN', deductionPercentage: 0 },
-      { repair: 'Motherboard Repaired', deductionPercentage: 0 },
-      { repair: 'Other Repairs', deductionPercentage: 0 }
-    ];
-
-    const defaultFrontScreen = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no deep scratches', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible scratches, swirls, 1 - 2 minor deep scratches', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, swirls, noticeable deep scratches', deductionPercentage: 0 },
-    ];
-
-    const defaultBody = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no scuffs or dents', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible scratches, 1 - 2 minor scuffs or dents', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, noticeable scuffs or dents', deductionPercentage: 0 },
-    ];
-
-    const defaultAccessories = [
-      { option: 'Everything (Complete Box)', deductionPercentage: 0, image: '' },
-      { option: 'Box Only', deductionPercentage: 0, image: '' },
-      { option: 'iPad Only', deductionPercentage: 0, image: '' }
-    ];
-
-const defaultApplePencil = [
-    { generation: '1st Generation', header: 'Excellent', condition: 'Almost like new with no visible signs of wear.', deductionPercentage: 0 },
-    { generation: '1st Generation', header: 'Good', condition: 'Some minor signs of use such as small scratches.', deductionPercentage: 0 },
-    { generation: '1st Generation', header: 'Fair', condition: 'Visible signs of use with noticeable scratches or marks.', deductionPercentage: 0 },
-    { generation: '1st Generation', header: 'Acceptable', condition: 'Heavily used with clear signs of wear, possibly with functional defects.', deductionPercentage: 0 },
-    { generation: '2nd Generation', header: 'Excellent', condition: 'Almost like new with no visible signs of wear.', deductionPercentage: 0 },
-    { generation: '2nd Generation', header: 'Good', condition: 'Some minor signs of use such as small scratches.', deductionPercentage: 0 },
-    { generation: '2nd Generation', header: 'Fair', condition: 'Visible signs of use with noticeable scratches or marks.', deductionPercentage: 0 },
-    { generation: '2nd Generation', header: 'Acceptable', condition: 'Heavily used with clear signs of wear, possibly with functional defects.', deductionPercentage: 0 }
-];
-
-
-    const defaultConnectivity = [
-        { option: 'WiFi + Cellular', deductionPercentage: 0 },
-        { option: 'WiFi Only', deductionPercentage: 0 },
-    ];
-
-    const defaultPTA = [
-      { option: 'Is Your iPad PTA Approved?', deductionPercentage: 0 },
-      { option: 'Is Your iPad Factory Unlocked?', deductionPercentage: 0 }
-    ];
-
-        if (vendor) existingIPad.vendor = vendor;
-        if (deviceType) existingIPad.deviceType = deviceType;
-        if (modelName) existingIPad.modelName = modelName;
-        if (maxPrice) existingIPad.maxPrice = maxPrice;
-
-      const updateDeductionsIfZero = (existing, incoming, defaults) => {
-      // If incoming data is missing, use defaults
-      if (!incoming || !Array.isArray(incoming)) return defaults;
-
-      // If the incoming data exists, but is missing key fields (like header/condition), replace them
-      return incoming.map((item, index) => {
-        const defaultItem = defaults[index] || {};
+    // Update deduction fields but retain the non-zero deduction percentages
+    const updateDeductionField = (existingField, newOptions) => {
+      return newOptions.map(optionId => {
+        const existingOption = existingField.find(opt => opt.option.toString() === optionId.toString());
         return {
-          ...defaultItem, // Use defaults as base
-          ...item, // Override with incoming data if exists
-          deductionPercentage: item.deductionPercentage || (existing[index]?.deductionPercentage || 0),
+          option: optionId,
+          deductionPercentage: existingOption && existingOption.deductionPercentage !== 0 
+            ? existingOption.deductionPercentage  // Keep the non-zero deduction percentage
+            : 0  // Set to 0 if it's a new entry or the current value is 0
         };
       });
     };
 
-        if (colors) {
-            const colorsArray = colors.split(',');
+    existingiPad.batteryHealth = updateDeductionField(existingiPad.batteryHealth, correctBatteryHealthIds);
+    existingiPad.cosmeticIssues = updateDeductionField(existingiPad.cosmeticIssues, correctCosmeticIssueIds);
+    existingiPad.connectivity = updateDeductionField(existingiPad.connectivity, correctConnectivityIds);
+    existingiPad.faults = updateDeductionField(existingiPad.faults, correctFaultIds);
+    existingiPad.repairs = updateDeductionField(existingiPad.repairs, correctRepairIds);
+    existingiPad.frontScreen = updateDeductionField(existingiPad.frontScreen, correctFrontScreenIds);
+    existingiPad.body = updateDeductionField(existingiPad.body, correctBodyIds);
+    existingiPad.accessories = updateDeductionField(existingiPad.accessories, correctAccessoriesIds);
+    existingiPad.applePencil = updateDeductionField(existingiPad.applePencil, correctApplePencilIds);
 
-            const updatedColors = await Promise.all(colorsArray.map(async (color) => {
-                const existingColor = existingIPad.colors.find(c => c.color === color);
-                const uploadedImage = req.files.find(file => file.fieldname === `images_${color}`);
+    // Save the updated iPad document
+    const updatediPad = await existingiPad.save();
+    return res.json(updatediPad);  // Return the updated iPad
 
-                console.log(`Processing color: ${color}, existingColor: ${existingColor ? existingColor : 'Not Found'}`);
-
-                let imageUrl = existingColor?.image || '';
-
-                if (uploadedImage) {
-                    console.log(`Uploading image for color: ${color}`);
-                    const fileName = `${modelName.replace(/\s/g, '_')}_${color}_${uuidv4()}`;
-                    imageUrl = await uploadToCloudinary(uploadedImage, fileName);
-                    console.log(`Uploaded image for color: ${color}, imageUrl: ${imageUrl}`);
-                }
-
-                return { color, image: imageUrl };
-            }));
-
-            existingIPad.colors = updatedColors;
-        }
-
-        if (storageSizes) {
-            const storageSizesArray = Array.isArray(storageSizes) ? storageSizes : storageSizes.split(',');
-            existingIPad.storageSizes = storageSizesArray.map(size => ({
-                size: typeof size === 'object' ? size.size : size,
-                deductionPercentage: size.deductionPercentage || 0,
-            }));
-        }
-
-        if (paymentOptions)
-        {
-            const paymentOptionsArray = Array.isArray(paymentOptions)
-            ? paymentOptions
-            : JSON.parse(paymentOptions)
-
-            existingIPad.paymentOptions = paymentOptionsArray.map(item => ({
-                option: item.option,
-                deductionPercentage: item.deductionPercentage || 0,
-            }));
-        }
-
-    if (Array.isArray(batteryHealth)) {
-      existingIPad.batteryHealth = batteryHealth.map(item => ({
-        health: item.health,
-        deductionPercentage: item.deductionPercentage || 0,
-      }));
-    }
-
-    if (Array.isArray(cosmeticIssues)) {
-      existingIPad.cosmeticIssues = cosmeticIssues.map(item => ({
-        header: item.header,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    if (Array.isArray(faults)) {
-      existingIPad.faults = faults.map(item => ({
-        header: item.header,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    if (Array.isArray(repairs)) {
-      existingIPad.repairs = repairs.map(item => ({
-        repair: item.repair,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    if (Array.isArray(frontScreen)) {
-      existingIPad.frontScreen = frontScreen.map(item => ({
-        header: item.header,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    if (Array.isArray(body)) {
-        existingIPad.body = body.map(item => ({
-            header: item.header,
-            condition: item.condition,
-            deductionPercentage: item.deductionPercentage || 0,
-            image: item.image || '',
-        }));
-    }
-
-    if (Array.isArray(accessories)) {
-      existingIPad.accessories = accessories.map(item => ({
-        option: item.option,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    if (Array.isArray(pta)) {
-      existingIPad.pta = pta.map(item => ({
-        option: item.option,
-        deductionPercentage: item.deductionPercentage || 0,
-      }));
-    }
-
-    if (Array.isArray(applePencil)) {
-      existingIPad.applePencil = applePencil.map(item => ({
-        generation: item.generation,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-      }));
-    }
-
-    if (Array.isArray(connectivity)) {
-      existingIPad.connectivity = connectivity.map(item => ({
-        option: item.option,
-        deductionPercentage: item.deductionPercentage || 0,
-      }));
-    }
-
-    existingIPad.batteryHealth = updateDeductionsIfZero(existingIPad.batteryHealth, batteryHealth, iPadBatteryHealthOptions);
-    existingIPad.cosmeticIssues = updateDeductionsIfZero(existingIPad.cosmeticIssues, cosmeticIssues, defaultCosmeticIssues);
-    existingIPad.faults = updateDeductionsIfZero(existingIPad.faults, faults, iPadFaultsOptions);
-    existingIPad.repairs = updateDeductionsIfZero(existingIPad.repairs, repairs, defaultRepairs);
-    existingIPad.frontScreen = updateDeductionsIfZero(existingIPad.frontScreen, frontScreen, defaultFrontScreen);
-    existingIPad.body = updateDeductionsIfZero(existingIPad.body, body, defaultBody);
-    existingIPad.accessories = updateDeductionsIfZero(existingIPad.accessories, accessories, defaultAccessories);
-    existingIPad.pta = updateDeductionsIfZero(existingIPad.pta, pta, defaultPTA);
-    existingIPad.applePencil = updateDeductionsIfZero(existingIPad.applePencil, applePencil, defaultApplePencil);
-    existingIPad.connectivity = updateDeductionsIfZero(existingIPad.connectivity, connectivity, defaultConnectivity);
-    existingIPad.accessories = updateDeductionsIfZero(existingIPad.accessories, accessories, defaultAccessories);
-
-
-    const updatedIPad = await existingIPad.save();
-
-    res.json(updatedIPad);
-    } catch (error) {
-    console.error('Error in updating iPad: ', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-    }
+  } catch (error) {
+    console.error('Error updating iPad:', error);
+    return res.status(500).json({ message: 'Server Error' });
+  }
 });
 
-router.put('/:id/device-details', upload.any(), async(req, res) => {
-    try {
-        const {
-            vendor,
-            deviceType,
-            modelName,
-            maxPrice,
-            colors,
-            storageSizes,
-            paymentOptions,
-            batteryHealth,
-            cosmeticIssues,
-            faults,
-            repairs,
-            frontScreen,
-            body,
-            accessories,
-            pta,
-            applePencil,
-            connectivity,
-        } = req.body;
+router.put('/:id/device-details', async (req, res) => {
+  try {
+    const iPadId = req.params.id;
+    const updateFields = req.body;  // Contains the updated deduction percentages for specific categories
+    console.log('Received updateFields:', updateFields);
 
-        const existingIPad = await iPad.findById(req.params.id);
-        if (!existingIPad) {
-            return res.status(404).json({ error: 'iPad not found' });
-        }
+    // Fetch the IPad document from the database
+    const fetchedIPad = await iPad.findById(iPadId);
+    if (!fetchedIPad) {
+      return res.status(404).json({ message: 'IPad not found' });
+    }
 
-        console.log('Received Body: ', req.body);
-        console.log('Received Files: ', req.files);
+    // Log the existing fetchedIPad document for debugging
+    console.log('Existing IPad Document:', fetchedIPad);
 
-        const filterBatteryHealthOptionsForiPads = (modelName) => {
-  const allOptions = [
-    { health: '95% or Above', deductionPercentage: 0 },
-    { health: '90% or Above', deductionPercentage: 0 },
-    { health: '85% or Above', deductionPercentage: 0 },
-    { health: '80% or Above', deductionPercentage: 0 },
-    { health: 'Less than 80%', deductionPercentage: 0 },
-  ];
+    // Iterate over each category (like batteryHealth, cosmeticIssues, etc.) in updateFields
+    for (const category in updateFields) {
+      if (Array.isArray(updateFields[category])) {
+        updateFields[category].forEach(updatedOption => {
+          console.log('Updating category:', category, 'with option:', updatedOption);
 
-  if (['iPad - 10th Generation (2022)', 'iPad Air - 5th Generation (2022)', 'iPad Pro 11-inch - 4th Generation (2022)'].includes(modelName)) {
-    return allOptions.filter((option) => ['95% or Above', '90% or Above', '85% or Above'].includes(option.health));
-  } else if (['iPad - 9th Generation (2021)', 'iPad mini - 6th Generation (2021)', 'iPad Pro 12.9-inch - 5th Generation (2021)'].includes(modelName)) {
-    return allOptions.filter((option) => ['90% or Above', '85% or Above', '80% or Above'].includes(option.health));
-  } else {
-    return allOptions.filter((option) => ['85% or Above', '80% or Above', 'Less than 80%'].includes(option.health));
+          // Find the corresponding option in the existing fetchedIPad document
+          const existingOption = fetchedIPad[category].find(option => option._id.toString() === updatedOption._id.toString());
+
+          if (existingOption) {
+            // Update the deduction percentage for the matched option
+            existingOption.deductionPercentage = updatedOption.deductionPercentage;
+          }
+        });
+      }
+    }
+
+    // Save the updated fetchedIPad document
+    await fetchedIPad.save();
+
+    res.json(fetchedIPad);  // Return the updated document to the frontend
+  } catch (error) {
+    console.error('Error updating IPad details:', error);
+    res.status(500).json({ message: 'Server Error' });
   }
-};
-
-// Apply the filtered battery health options based on the iPad model name
-const iPadBatteryHealthOptions = filterBatteryHealthOptionsForiPads(modelName);
-
-
-    const defaultCosmeticIssues = [
-      { header: 'Damaged Display', condition: 'Front glass is cracked or shattered', deductionPercentage: 0 },
-      { header: 'Damaged Body', condition: 'Body is bent/broken or heavily dented', deductionPercentage: 0 },
-      { header: 'Damaged Camera Lens', condition: 'Camera lens is cracked or shattered', deductionPercentage: 0 },
-    ];
-
-    const paymentOptionsArray = Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]');
-    console.log('Payment Options Array: ', paymentOptionsArray);
-
-    // Function to filter out Faulty Face ID based on the model name
-const filterFaultsForiPads = (modelName) => {
-  const allFaults = [
-      { header: 'Faulty Display', condition: 'Dead Pixels/Spots/Lines', deductionPercentage: 0},
-      { header: 'Faulty Earpiece', condition: 'No Audio/Noisy Audio during phone calls', deductionPercentage: 0 },
-      { header: 'Faulty Face ID', condition: 'Face ID is not working or not working consistently', deductionPercentage: 0 },
-      { header: 'Faulty Proximity Sensor', condition: 'Display remains on during calls', deductionPercentage: 0 },
-      { header: 'Faulty Vibration Motor', condition: 'No Vibration/Rattling Noise', deductionPercentage: 0 },
-      { header: 'Faulty Power Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
-      { header: 'Faulty Volume Button', condition: 'Not Working/Hard to Press', deductionPercentage: 0 },
-      { header: 'Faulty Mute Switch', condition: 'Not Working/Not Switching', deductionPercentage: 0 },
-      { header: 'Faulty Front Camera', condition: 'Front Camera does not work, or the image is blurry', deductionPercentage: 0 },
-      { header: 'Faulty Rear Camera', condition: 'Rear Camera does not work, or the image is blurry', deductionPercentage: 0 },
-      { header: 'Faulty Flash', condition: 'Dead/Not Working', deductionPercentage: 0 },
-      { header: 'Faulty Microphone', condition: 'Not Working/Noisy', deductionPercentage: 0 },
-      { header: 'Faulty Loudspeaker', condition: 'No Audio/Noisy Audio', deductionPercentage: 0 },
-      { header: 'Faulty Charging Port', condition: 'Dead/Not Working', deductionPercentage: 0 },
-  ];
-
-  // Exclude Faulty Face ID for certain iPad models
-  if (['iPad - 9th Generation (2021)',
-    'iPad mini - 6th Generation (2021)',
-    'iPad Pro 12.9-inch - 5th Generation (2021)',
-    'iPad Air - 5th Generation (2022)'].includes(modelName)) {
-    return allFaults.filter((fault) => fault.header !== 'Faulty Face ID');
-  }
-
-  // Return all faults if the model is not in the list
-  return allFaults;
-};
-
-// Apply the filtered faults based on the iPad model name
-const iPadFaultsOptions = filterFaultsForiPads(modelName);
-
-
-    const defaultRepairs = [
-      { repair: 'Touch Screen Replaced', deductionPercentage: 0 },
-      { repair: 'Display Replaced', deductionPercentage: 0 },
-      { repair: 'Front Camera Replaced', deductionPercentage: 0 },
-      { repair: 'Back Camera Replaced', deductionPercentage: 0 },
-      { repair: 'Loudspeaker Replaced', deductionPercentage: 0 },
-      { repair: 'Earpiece Replaced', deductionPercentage: 0 },
-      { repair: 'Microphone Replaced', deductionPercentage: 0 },
-      { repair: 'Battery Replaced', deductionPercentage: 0 },
-      { repair: 'Battery Replaced by REGEN', deductionPercentage: 0 },
-      { repair: 'Motherboard Repaired', deductionPercentage: 0 },
-      { repair: 'Other Repairs', deductionPercentage: 0 }
-    ];
-
-    const defaultFrontScreen = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no deep scratches', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible scratches, swirls, 1 - 2 minor deep scratches', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, swirls, noticeable deep scratches', deductionPercentage: 0 },
-    ];
-
-    const defaultBody = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no scuffs or dents', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible scratches, 1 - 2 minor scuffs or dents', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, noticeable scuffs or dents', deductionPercentage: 0 },
-    ];
-
-    const defaultAccessories = [
-      { option: 'Everything (Complete Box)', deductionPercentage: 0, image: '' },
-      { option: 'Box Only', deductionPercentage: 0, image: '' },
-      { option: 'iPad Only', deductionPercentage: 0, image: '' }
-    ];
-
-    const defaultApplePencil = [
-    { generation: '1st Generation', header: 'Excellent', condition: 'Almost like new with no visible signs of wear.', deductionPercentage: 0 },
-    { generation: '1st Generation', header: 'Good', condition: 'Some minor signs of use such as small scratches.', deductionPercentage: 0 },
-    { generation: '1st Generation', header: 'Fair', condition: 'Visible signs of use with noticeable scratches or marks.', deductionPercentage: 0 },
-    { generation: '1st Generation', header: 'Acceptable', condition: 'Heavily used with clear signs of wear, possibly with functional defects.', deductionPercentage: 0 },
-    { generation: '2nd Generation', header: 'Excellent', condition: 'Almost like new with no visible signs of wear.', deductionPercentage: 0 },
-    { generation: '2nd Generation', header: 'Good', condition: 'Some minor signs of use such as small scratches.', deductionPercentage: 0 },
-    { generation: '2nd Generation', header: 'Fair', condition: 'Visible signs of use with noticeable scratches or marks.', deductionPercentage: 0 },
-    { generation: '2nd Generation', header: 'Acceptable', condition: 'Heavily used with clear signs of wear, possibly with functional defects.', deductionPercentage: 0 }
-];
-
-    const defaultConnectivity = [
-        { option: 'WiFi + Cellular', deductionPercentage: 0 },
-        { option: 'WiFi Only', deductionPercentage: 0 },
-    ];
-
-    const defaultPTA = [
-      { option: 'Is Your iPad PTA Approved?', deductionPercentage: 0 },
-      { option: 'Is Your iPad Factory Unlocked?', deductionPercentage: 0 }
-    ];
-
-        if (vendor) existingIPad.vendor = vendor;
-        if (deviceType) existingIPad.deviceType = deviceType;
-        if (modelName) existingIPad.modelName = modelName;
-        if (maxPrice) existingIPad.maxPrice = maxPrice;
-
-    const updateDeductionsIfZero = (existing = [], incoming = [], defaults = []) => {
-  if (!incoming || !Array.isArray(incoming) || incoming.length === 0) {
-    // Return existing if available, otherwise use defaults
-    return existing.length > 0 ? existing : defaults;
-  }
-
-  return incoming.map((item, index) => {
-    const defaultItem = defaults[index] || {}; // Use defaults if no incoming or existing
-    const existingItem = existing[index] || {}; // Use existing data if available
-
-    return {
-      ...defaultItem,  // Default as base
-      ...existingItem,  // Preserve existing data
-      ...item,  // Override with incoming data
-      deductionPercentage: item.deductionPercentage !== undefined 
-        ? item.deductionPercentage 
-        : (existingItem.deductionPercentage !== undefined
-          ? existingItem.deductionPercentage
-          : defaultItem.deductionPercentage || 0)  // Fallback to default or zero
-    };
-  });
-};
-
-        if (colors) {
-            const colorsArray = colors.split(',');
-
-            const updatedColors = await Promise.all(colorsArray.map(async (color) => {
-                const existingColor = existingIPad.colors.find(c => c.color === color);
-                const uploadedImage = req.files.find(file => file.fieldname === `images_${color}`);
-
-                console.log(`Processing color: ${color}, existingColor: ${existingColor ? existingColor : 'Not Found'}`);
-
-                let imageUrl = existingColor?.image || '';
-
-                if (uploadedImage) {
-                    console.log(`Uploading image for color: ${color}`);
-                    const fileName = `${modelName.replace(/\s/g, '_')}_${color}_${uuidv4()}`;
-                    imageUrl = await uploadToCloudinary(uploadedImage, fileName);
-                    console.log(`Uploaded image for color: ${color}, imageUrl: ${imageUrl}`);
-                }
-
-                return { color, image: imageUrl };
-            }));
-
-            existingIPad.colors = updatedColors;
-        }
-
-        if (storageSizes) {
-            const storageSizesArray = Array.isArray(storageSizes) ? storageSizes : storageSizes.split(',');
-            existingIPad.storageSizes = storageSizesArray.map(size => ({
-                size: typeof size === 'object' ? size.size : size,
-                deductionPercentage: size.deductionPercentage || 0,
-            }));
-        }
-
-        if (paymentOptions)
-        {
-            const paymentOptionsArray = Array.isArray(paymentOptions)
-            ? paymentOptions
-            : JSON.parse(paymentOptions)
-
-            existingIPad.paymentOptions = paymentOptionsArray.map(item => ({
-                option: item.option,
-                deductionPercentage: item.deductionPercentage || 0,
-            }));
-        }
-
-    if (Array.isArray(batteryHealth)) {
-      existingIPad.batteryHealth = batteryHealth.map(item => ({
-        health: item.health,
-        deductionPercentage: item.deductionPercentage || 0,
-      }));
-    }
-
-    if (Array.isArray(cosmeticIssues)) {
-      existingIPad.cosmeticIssues = cosmeticIssues.map(item => ({
-        header: item.header,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    if (Array.isArray(faults)) {
-      existingIPad.faults = faults.map(item => ({
-        header: item.header,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    if (Array.isArray(repairs)) {
-      existingIPad.repairs = repairs.map(item => ({
-        repair: item.repair,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    if (Array.isArray(frontScreen)) {
-      existingIPad.frontScreen = frontScreen.map(item => ({
-        header: item.header,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    if (Array.isArray(body)) {
-        existingIPad.body = body.map(item => ({
-            header: item.header,
-            condition: item.condition,
-            deductionPercentage: item.deductionPercentage || 0,
-            image: item.image || '',
-        }));
-    }
-
-    if (Array.isArray(accessories)) {
-      existingIPad.accessories = accessories.map(item => ({
-        option: item.option,
-        deductionPercentage: item.deductionPercentage || 0,
-        image: item.image || '',
-      }));
-    }
-
-    if (Array.isArray(pta)) {
-      existingIPad.pta = pta.map(item => ({
-        option: item.option,
-        deductionPercentage: item.deductionPercentage || 0,
-      }));
-    }
-
-    if (Array.isArray(applePencil)) {
-      existingIPad.applePencil = applePencil.map(item => ({
-        generation: item.generation,
-        condition: item.condition,
-        deductionPercentage: item.deductionPercentage || 0,
-      }));
-    }
-
-    if (Array.isArray(connectivity)) {
-      existingIPad.connectivity = connectivity.map(item => ({
-        option: item.option,
-        deductionPercentage: item.deductionPercentage || 0,
-      }));
-    }
-
-    existingIPad.batteryHealth = updateDeductionsIfZero(existingIPad.batteryHealth, batteryHealth, iPadBatteryHealthOptions);
-    existingIPad.cosmeticIssues = updateDeductionsIfZero(existingIPad.cosmeticIssues, cosmeticIssues, defaultCosmeticIssues);
-    existingIPad.faults = updateDeductionsIfZero(existingIPad.faults, faults, iPadFaultsOptions);
-    existingIPad.repairs = updateDeductionsIfZero(existingIPad.repairs, repairs, defaultRepairs);
-    existingIPad.frontScreen = updateDeductionsIfZero(existingIPad.frontScreen, frontScreen, defaultFrontScreen);
-    existingIPad.body = updateDeductionsIfZero(existingIPad.body, body, defaultBody);
-    existingIPad.accessories = updateDeductionsIfZero(existingIPad.accessories, accessories, defaultAccessories);
-    existingIPad.pta = updateDeductionsIfZero(existingIPad.pta, pta, defaultPTA);
-    existingIPad.applePencil = updateDeductionsIfZero(existingIPad.applePencil, applePencil, defaultApplePencil);
-    existingIPad.connectivity = updateDeductionsIfZero(existingIPad.connectivity, connectivity, defaultConnectivity);
-    existingIPad.accessories = updateDeductionsIfZero(existingIPad.accessories, accessories, defaultAccessories);
-
-
-    const updatedIPad = await existingIPad.save();
-    
-    res.json(updatedIPad);
-    } catch (error) {
-    console.error('Error in updating iPad: ', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-    }
 });
 
 
 // Route to get all iPads or fetch by ID
 router.get('/', async (req, res) => {
-    try {
-        const id = req.query.id;
+  try {
+    const id = req.query.id; // Get the id from query parameters
 
-        if (id) {
-            console.log(`Fetching iPad with ID: ${id}`);
-            const fetchedIPad = await iPad.findOne({ id: id});
+    if (id) {
+      console.log(`Fetching IPad with ID: ${id}`);
 
-            if (fetchedIPad) {
-                res.json(fetchedIPad);
-            } else {
-                res.status(404).json({ error: 'iPad not found' });
-            }
-        } else {
-            const IPads = await iPad.find();
-            res.json(IPads);
-        }
-    } catch (error) {
-        console.error('Error retrieving iPads: ', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+      // Fetch IPad data and populate the option fields with actual data by _id
+      const fetchedIPad = await iPad
+        .findById(id)
+        .populate('batteryHealth.option', 'option')
+        .populate('cosmeticIssues.option', 'header condition')
+        .populate('faults.option', 'header condition')
+        .populate('repairs.option', 'option')
+        .populate('frontScreen.option', 'header condition')
+        .populate('body.option', 'header condition')
+        .populate('accessories.option', 'option')
+        .populate('connectivity.option', 'option')
+        .populate('applePencil.option', 'generation header condition');
+
+      console.log('Populated IPad data:', JSON.stringify(fetchedIPad, null, 2));
+
+      if (fetchedIPad) {
+        res.json(fetchedIPad);
+      } else {
+        res.status(404).json({ message: 'IPad not found' });
+      }
+    } else {
+      // Fetch all IPads if no ID is provided
+      const iPads = await iPad.find();
+      res.json(iPads);
     }
+  } catch (error) {
+    console.error('Error retrieving IPads:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
 });
 
 // Route to get iPad by model name
 router.get('/:modelName', async (req, res) => {
-    try {
-        const modelName = req.params.modelName;
-        if (!modelName) {
-            return res.status(400).json({ error: 'Model name is required' });
-        }
+  try {
+    const modelName = req.params.modelName;
 
-        const fetchedIPad = await iPad.findOne({ modelName });
-        if (!fetchedIPad) {
-            return res.status(404).json({ message: 'iPad not found' });
-        }
-        res.json(fetchedIPad);
-    } catch (error) {
-        console.error('Error retrieving iPad:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+    // Fetch IPad data and populate the option fields with actual data
+    const fetchedIPad = await iPad
+      .findOne({ modelName })
+      .populate('batteryHealth.option', 'option')  // Assuming option is the field in BatteryHealth
+      .populate('cosmeticIssues.option', 'header condition')  // Assuming header and condition are fields in CosmeticIssues
+      .populate('connectivity.option', 'option')  // Assuming option is the field in Connectivity
+      .populate('faults.option', 'header condition')  // Assuming header and condition are fields in Faults
+      .populate('repairs.option', 'option')  // Assuming option is the field in Repairs
+      .populate('frontScreen.option', 'header condition')  // Assuming header and condition are fields in FrontScreen
+      .populate('body.option', 'header condition')  // Assuming header and condition are fields in Back
+      .populate('accessories.option', 'option')  // Assuming option is the field in Accessories
+      .populate('applePencil.option', 'generation header condition');  // Assuming generation, header, and condition are fields in ApplePencil
+
+    if (!fetchedIPad) {
+      return res.status(404).json({ message: 'IPad not found' });
     }
+
+    res.json(fetchedIPad);
+  } catch (error) {
+    console.error('Error retrieving IPad:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
 });
 
 router.delete('/:id', async (req, res) => {
-    try {
-        const id = req.params.id;
-        const deletedIPad = await iPad.findByIdAndDelete(id);
-
-        if (!deletedIPad) {
-            return res.status(404).json({ message: 'iPad not found '})
-        }
-        res.json({ message: 'iPad deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting iPad', error);
-        res.status(500).json({ message: 'Interval Server Error '});
-    }
+  try {
+    const id = req.params.id;
+    const deletedIPad = await iPad.findByIdAndDelete(id);
+    return deletedIPad ? res.json({ message: 'IPad deleted successfully' }) : res.status(404).json({ message: 'IPad not found' });
+  } catch (error) {
+    console.error('Error deleting IPad:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
 });
 
 module.exports = router;

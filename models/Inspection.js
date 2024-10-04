@@ -2,13 +2,11 @@ const mongoose = require('mongoose');
 
 // Reused Schemas
 const PtaOptionSchema = new mongoose.Schema({
-  value: { type: String, required: true },
-  deductionPercentage: { type: Number, required: true },
+  value: { type: String },
 });
 
 const UnknownPartSchema = new mongoose.Schema({
-  value: { type: String, required: true },
-  deductionPercentage: { type: Number, required: true },
+  value: { type: String },
 });
 
 const RepairOptionSchema = new mongoose.Schema({
@@ -59,9 +57,8 @@ const InspectionSchema = new mongoose.Schema({
   watchCaseType: { type: String }, // For watches
   watchCaseFinish: { type: String }, // For watches
   watchCaseSize: { type: String }, // For watches
-  bandsType: { type: String }, // For watches
-  strapCondition: { type: String }, // New field for strap condition
-  bodyCondition: { type: String }, // New field for body condition
+  band: { type: String }, // For watches
+  strap: { type: String }, // New field for strap condition
   storageSize: { type: String },
   colorOption: { type: String },
   memorySize: { type: String },
@@ -79,8 +76,8 @@ const InspectionSchema = new mongoose.Schema({
   back: { type: String },
   side: { type: String },
   body: { type: String },
-  pta: { type: Map, of: PtaOptionSchema },
-  unknownPart: { type: Map, of: UnknownPartSchema },
+  pta: { type: [PtaOptionSchema] },
+  unknownPart: { type: [UnknownPartSchema] },
   accessories: { type: String },
   applePencil: { type: [ApplePencilSchema], default: undefined },
   paymentOption: { type: PaymentOptionSchema, required: true },

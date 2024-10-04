@@ -1,108 +1,105 @@
 const mongoose = require('mongoose');
 
-// Define sub-schemas for each category
-
-const BatteryHealthSchema = new mongoose.Schema({
-  health: { type: String, required: true },
-  deductionPercentage: { type: Number, default: 0 },
-});
-
-const CosmeticIssuesSchema = new mongoose.Schema({
-  header: { type: String, required: true },
-  condition: { type: String, required: true },
-  deductionPercentage: { type: Number, default: 0 },
-  image: { type: String, default: '' }, // Image can be updated later
-});
-
+// Payment Options Schema
 const PaymentOptionsSchema = new mongoose.Schema({
   option: { type: String, required: true, enum: ['Store Credit', 'Instant Cash'] },
   deductionPercentage: { type: Number, default: 0 },
 });
 
-const FaultsSchema = new mongoose.Schema({
-  header: { type: String, required: true },
-  condition: { type: String, required: true },
-  deductionPercentage: { type: Number, default: 0 },
-  image: { type: String, default: '' }, // Image can be updated later
-});
-
-const RepairSchema = new mongoose.Schema({
-  repair: { type: String, required: true },
-  deductionPercentage: { type: Number, default: 0 },
-  image: { type: String, default: '' }, // Image can be updated later
-});
-
-const FrontScreenSchema = new mongoose.Schema({
-  header: { type: String, required: true},
-  condition: { type: String, required: true },
-  deductionPercentage: { type: Number, default: 0 },
-});
-
-const BackSchema = new mongoose.Schema({
-  header: { type: String, required: true},
-  condition: { type: String, required: true },
-  deductionPercentage: { type: Number, default: 0 },
-});
-
-const SideSchema = new mongoose.Schema({
-  header: { type: String, required: true },
-  condition: { type: String, required: true },
-  deductionPercentage: { type: Number, default: 0 },
-});
-
-const SIMVariantSchema = new mongoose.Schema({
-  option: { type: String, required: true, enum: ['Dual eSIM', 'Dual Physical SIM', 'eSIM + Physical SIM'] },
-  deductionPercentage: { type: Number, default: 0 },
-});
-
-const PTASchema = new mongoose.Schema({
-  option: { type: String, required: true, enum: ['Is Your iPhone PTA Approved?', 'Is Your iPhone Factory Unlocked?'] },
-  deductionPercentage: { type: Number, default: 0 },
-});
-
-const UnknownPartSchema = new mongoose.Schema({
-  option: { type: String, required: true },
-  deductionPercentage: { type: Number, default: 0 },
-});
-
-const AccessoriesSchema = new mongoose.Schema({
-  option: { type: String, required: true, enum: ['Everything (Complete Box)', 'Box Only', 'iPhone Only'] },
-  deductionPercentage: { type: Number, default: 0 },
-  image: { type: String, default: '' }, // Image can be updated later
-});
-
 // Main iPhone schema
-
 const iPhoneSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   vendor: { type: String, required: true, default: 'Apple' },
   deviceType: { type: String, required: true, default: 'Smartphone' },
   modelName: { type: String, required: true, unique: true },
   maxPrice: { type: Number, required: true },
+
+  // Payment options with deduction percentages
   paymentOptions: { type: [PaymentOptionsSchema], default: undefined },
+
+  // Color options
   colors: [
     {
       color: { type: String, required: true },
       image: { type: String, required: true },
     },
   ],
+
+  // Storage sizes with their respective deduction percentages
   storageSizes: [
     {
-      size: { type: String },
+      size: { type: String, required: true },
       deductionPercentage: { type: Number, default: 0 },
     },
   ],
-  batteryHealth: { type: [BatteryHealthSchema], default: undefined },
-  cosmeticIssues: { type: [CosmeticIssuesSchema], default: undefined },
-  faults: { type: [FaultsSchema], default: undefined },
-  repairs: { type: [RepairSchema], default: undefined },
-  frontScreen: { type: [FrontScreenSchema], default: undefined },
-  back: { type: [BackSchema], default: undefined },
-  side: { type: [SideSchema], default: undefined },
-  simVariant: { type: [SIMVariantSchema], default: undefined },
-  pta: { type: [PTASchema], default: undefined },
-  accessories: { type: [AccessoriesSchema], default: undefined },
-  unknownPart: { type: [UnknownPartSchema], default: undefined },
+
+  // Referenced deduction options with custom deduction percentage for each device
+  batteryHealth: [
+    {
+      option: { type: mongoose.Schema.Types.ObjectId, ref: 'BatteryHealthOption', _id: false },
+      deductionPercentage: { type: Number, default: 0 },
+    },
+  ],
+  cosmeticIssues: [
+    {
+      option: { type: mongoose.Schema.Types.ObjectId, ref: 'CosmeticIssueOption', _id: false },
+      deductionPercentage: { type: Number, default: 0 },
+    },
+  ],
+  faults: [
+    {
+      option: { type: mongoose.Schema.Types.ObjectId, ref: 'FaultOption', _id: false },
+      deductionPercentage: { type: Number, default: 0 },
+    },
+  ],
+  repairs: [
+    {
+      option: { type: mongoose.Schema.Types.ObjectId, ref: 'RepairOption', _id: false },
+      deductionPercentage: { type: Number, default: 0 },
+    },
+  ],
+  frontScreen: [
+    {
+      option: { type: mongoose.Schema.Types.ObjectId, ref: 'FrontScreenOption', _id: false },
+      deductionPercentage: { type: Number, default: 0 },
+    },
+  ],
+  back: [
+    {
+      option: { type: mongoose.Schema.Types.ObjectId, ref: 'BackOption', _id: false },
+      deductionPercentage: { type: Number, default: 0 },
+    },
+  ],
+  side: [
+    {
+      option: { type: mongoose.Schema.Types.ObjectId, ref: 'SideOption', _id: false },
+      deductionPercentage: { type: Number, default: 0 },
+    },
+  ],
+  simVariant: [
+    {
+      option: { type: mongoose.Schema.Types.ObjectId, ref: 'SIMVariantOption', _id: false },
+      deductionPercentage: { type: Number, default: 0 },
+    },
+  ],
+  pta: [
+    {
+      option: { type: mongoose.Schema.Types.ObjectId, ref: 'PTAOption', _id: false },
+      deductionPercentage: { type: Number, default: 0 },
+    },
+  ],
+  accessories: [
+    {
+      option: { type: mongoose.Schema.Types.ObjectId, ref: 'AccessoriesOption', _id: false },
+      deductionPercentage: { type: Number, default: 0 },
+    },
+  ],
+  unknownParts: [
+    {
+      option: { type: mongoose.Schema.Types.ObjectId, ref: 'UnknownPartOption', _id: false },
+      deductionPercentage: { type: Number, default: 0 },
+    },
+  ],
 });
 
 module.exports = mongoose.model('iPhone', iPhoneSchema);

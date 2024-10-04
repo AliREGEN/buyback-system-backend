@@ -13,9 +13,8 @@ router.post('/', async (req, res) => {
       watchCaseType,
       watchCaseFinish,
       watchCaseSize,
-      bandsType,
-      strapCondition,  // Added
-      bodyCondition,   // Added
+      band,
+      strap,
       storageSize,
       colorOption,
       simOption,
@@ -66,9 +65,8 @@ router.post('/', async (req, res) => {
       watchCaseType,
       watchCaseFinish,
       watchCaseSize,
-      bandsType,
-      strapCondition,  // Added
-      bodyCondition,   // Added
+      strap,
+      band,
       storageSize,
       colorOption,
       simOption,

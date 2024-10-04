@@ -4,6 +4,16 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
 const cloudinary = require('../config/cloudinary');
+const BatteryHealth = require('../models/batteryHealthOption');
+const CosmeticIssues = require('../models/cosmeticIssueOption');
+const Faults = require('../models/faultOption');
+const Repairs = require('../models/repairOption');
+const FrontScreen = require('../models/frontScreenOption');
+const Body = require('../models/bodyOption');
+const Strap = require('../models/strapOption');
+const Band = require('../models/bandOption');
+const Accessories = require('../models/accessoriesOption');
+const Connectivity = require('../models/connectivityOption');
 
 // Set up multer for file handling
 const storage = multer.memoryStorage();
@@ -28,132 +38,109 @@ const uploadToCloudinary = (file, fileName) => {
   });
 };
 
-// Route to add a new Watch
-router.post('/', upload.any(), async (req, res) => {
+const safeParse = (value) => {
   try {
-    console.log('Received Body: ', req.body);
-    console.log('Received Files: ', req.files);
-
-    const { vendor, deviceType, modelName, maxPrice, paymentOptions, watchCaseType, watchCaseFinish, watchCaseSize } = req.body;
-
-    const paymentOptionsArray = Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]');
-     const watchCaseFinishArray = Array.isArray(watchCaseFinish) ? watchCaseFinish : watchCaseFinish.split(',');
-      const watchCaseSizesArray = Array.isArray(watchCaseSize) ? watchCaseSize : watchCaseSize.split(',');
-      const watchCaseTypeArray = Array.isArray(watchCaseType) ? watchCaseType : watchCaseType.split(',');
-
-    // Ensure each watchCaseSize is formatted properly
-    const watchCaseSizeFormatted = watchCaseSizesArray.map(size => ({
-      size, // Map the size directly
-      deductionPercentage: 0 // Set default deductionPercentage
-    }));
-
-    // Ensure each watchCaseType is formatted properly
-    const watchCaseTypeFormatted = watchCaseTypeArray.map(type => ({
-      caseType: type, // Map the type directly
-      deductionPercentage: 0 // Set default deductionPercentage
-    }));
-    
-    // Handle image uploads (if any)
-    let caseFinishImagesArray = [];
-
-    if(req.files && req.files.length) {
-      for (let i = 0; i < req.files.length; i++) {
-        const colorName = watchCaseFinishArray[i];
-        const file = req.files[i];
-        const fileName = `${modelName.replace(/\s/g, '_')}_${colorName}_${uuidv4()}`;
-
-        const imageUrl = await uploadToCloudinary(file, fileName);
-        caseFinishImagesArray.push({ finish: colorName, image: imageUrl });
-      }
-    } else {
-      caseFinishImagesArray = watchCaseFinishArray.map((finish) => ({
-        finish,
-        image: null,
-      }));
+    if (!value || value === 'undefined') {
+      return []; // Return an empty array for undefined or invalid input
     }
-
-
-    // Default options
-    // Filter battery health based on Apple Watch modelName
-const filterBatteryHealthOptionsForWatches = (modelName) => {
-  const allOptions = [
-    { health: '95% or Above', deductionPercentage: 0 },
-    { health: '90% or Above', deductionPercentage: 0 },
-    { health: '85% or Above', deductionPercentage: 0 },
-    { health: '80% or Above', deductionPercentage: 0 },
-    { health: 'Less than 80%', deductionPercentage: 0 },
-  ];
-
-  if (['Apple Watch Ultra 2 (2023)', 'Apple Watch Series 9 (2023)', 'Apple Watch Ultra (2022)'].includes(modelName)) {
-    return allOptions.filter((option) => ['95% or Above', '90% or Above', '85% or Above'].includes(option.health));
-  } else if (['Apple Watch Series 7 (2021)', 'Apple Watch Series 8 (2022)'].includes(modelName)) {
-    return allOptions.filter((option) => ['90% or Above', '85% or Above', '80% or Above'].includes(option.health));
-  } else {
-    return allOptions.filter((option) => ['85% or Above', '80% or Above', 'Less than 80%'].includes(option.health));
+    return JSON.parse(value); // Parse if it's a valid JSON string
+  } catch (error) {
+    console.error('Error parsing JSON:', error);
+    return []; // Return an empty array in case of error
   }
 };
 
-// Apply the filtered battery health options based on the Watch model name
-const watchBatteryHealthOptions = filterBatteryHealthOptionsForWatches(modelName);
+const fetchOptions = async () => {
+  const batteryHealthOptions = await BatteryHealth.find();
+  const cosmeticIssuesOptions = await CosmeticIssues.find();
+  const connectivityOptions = await Connectivity.find();
+  const faultsOptions = await Faults.find();
+  const repairsOptions = await Repairs.find();
+  const frontScreenOptions = await FrontScreen.find();
+  const bodyOptions = await Body.find();
+  const strapOptions = await Strap.find();
+  const bandOptions = await Band.find();
+  const accessoriesOptions = await Accessories.find();
 
+  return {
+    batteryHealthOptions,
+    cosmeticIssuesOptions,
+    connectivityOptions,
+    faultsOptions,
+    repairsOptions,
+    frontScreenOptions,
+    bodyOptions,
+    strapOptions,
+    bandOptions,
+    accessoriesOptions,
+  };
+};
 
-const defaultCosmeticIssues = [
-  { header: 'Damaged Display', condition: 'Front glass is cracked or shattered', deductionPercentage: 0 },
-  { header: 'Damaged Body', condition: 'Watch body is cracked/bent/broken or heavily dented', deductionPercentage: 0 },
-];
+const mapDynamicOptions = (parsedArray, optionsArray) => {
+  return parsedArray.map((item) => {
+    const matchedOption = optionsArray.find(
+      (opt) => opt._id.toString() === item.toString()  // Ensure ObjectId comparison consistency
+    );
+    if (matchedOption) {
+      console.log(`Matched Option: ${matchedOption._id} for Parsed Item: ${item}`);
+    } else {
+      console.log(`No match found for Parsed Item: ${item}`);
+    }
+    return matchedOption ? matchedOption._id : null;
+  }).filter(Boolean);  // Filter null or undefined results
+};
 
-const defaultStrapCondition = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible wear and tear or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no deep wear and tear', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible signs of usage, 1 - 2 minor deep wear and tear', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Torn out, noticeable deep wear and tear', deductionPercentage: 0 },
-];
+// Route to add a new Watch
+router.post('/', upload.any(), async (req, res) => {
+  try {
 
-const defaultBodyCondition = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no scuffs or dents', deductionPercentage: 0 },
-      { header: 'Fair', condition: 'Visible scratches, 1 - 2 minor scuffs or dents', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, noticeable scuffs or dents', deductionPercentage: 0 },
-];
+    const options = await fetchOptions();
 
-const defaultFaults = [
-  { header: 'Faulty Display', condition: 'Dead Pixels/Lines', deductionPercentage: 0 },
-  { header: 'Faulty Side Button', condition: 'Not Working/Sticky', deductionPercentage: 0 },
-  { header: 'Faulty Battery', condition: 'Drains Quickly', deductionPercentage: 0 },
-  { header: 'Faulty Speaker', condition: 'No Sound/Static', deductionPercentage: 0 },
-  { header: 'Faulty Microphone', condition: 'No Sound/Static', deductionPercentage: 0 },
-  { header: 'Faulty Bluetooth', condition: 'Not Connecting', deductionPercentage: 0 },
-  { header: 'Faulty Wi-Fi', condition: 'Not Connecting', deductionPercentage: 0 },
-  { header: 'Faulty GPS', condition: 'Not Connecting', deductionPercentage: 0 },
-  { header: 'Faulty Optical Heart Sensor', condition: 'Not Working', deductionPercentage: 0 },
-  { header: 'Faulty ECG', condition: 'Not Working', deductionPercentage: 0 },
-  { header: 'Faulty Compass', condition: 'Not Working', deductionPercentage: 0 },
-  { header: 'Faulty Gyroscope', condition: 'Not Working', deductionPercentage: 0 },
-  { header: 'Faulty Digital Crown', condition: 'Not Working', deductionPercentage: 0 },
-];
+    // Log options fetched from collections for debugging
+    console.log('Available options:', options);
 
-const defaultRepairs = [
-  { repair: 'Screen Replaced', deductionPercentage: 0 },
-  { repair: 'Battery Replaced', deductionPercentage: 0 },
-  { repair: 'Body Replaced', deductionPercentage: 0 },
-  { repair: 'Speaker Replaced', deductionPercentage: 0 },
-  { repair: 'Microphone Replaced', deductionPercentage: 0 },
-  { repair: 'Bluetooth Replaced', deductionPercentage: 0 },
-  { repair: 'Wi-Fi Replaced', deductionPercentage: 0 },
-  { repair: 'Other Repairs', deductionPercentage: 0 }
-];
+    const { vendor, deviceType, modelName, maxPrice, paymentOptions, watchCaseType, watchCaseFinish, watchCaseSize,
+      batteryHealth, cosmeticIssues, faults, repairs, frontScreen, body, strap, band, accessories, connectivity
+     } = req.body;
 
-const defaultAccessories = [
-  { option: 'Everything (Complete Box)', deductionPercentage: 0 },
-  { option: 'Box Only', deductionPercentage: 0 },
-  { option: 'Watch Only', deductionPercentage: 0 },
-];
+    const parsedBatteryHealth = batteryHealth ? safeParse(batteryHealth) : [];
+    const parsedCosmeticIssues = cosmeticIssues ? safeParse(cosmeticIssues) : [];
+    const parsedConnectivity = connectivity ? safeParse(connectivity) : [];
+    const parsedFaults = faults ? safeParse(faults) : [];
+    const parsedRepairs = repairs ? safeParse(repairs) : [];
+    const parsedFrontScreen = frontScreen ? safeParse(frontScreen) : [];
+    const parsedBody = body ? safeParse(body) : [];
+    const parsedStrap = strap ? safeParse(strap) : [];
+    const parsedBand = band ? safeParse(band) : [];
+    const parsedAccessories = accessories ? safeParse(accessories) : [];
 
-const defaultBandsType = [
-  { option: 'Original Band', deductionPercentage: 0 },
-  { option: 'Aftermarket Band', deductionPercentage: 0 },
-];
+    const correctBatteryHealthIds = parsedBatteryHealth.length ? mapDynamicOptions(parsedBatteryHealth, options.batteryHealthOptions) : [];
+    const correctCosmeticIssueIds = parsedCosmeticIssues.length ? mapDynamicOptions(parsedCosmeticIssues, options.cosmeticIssuesOptions) : [];
+    const correctFaultIds = parsedFaults.length ? mapDynamicOptions(parsedFaults, options.faultsOptions) : [];
+    const correctConnectivityIds = parsedConnectivity.length ? mapDynamicOptions(parsedConnectivity, options.connectivityOptions) : [];
+    const correctRepairIds = parsedRepairs.length ? mapDynamicOptions(parsedRepairs, options.repairsOptions) : [];
+    const correctFrontScreenIds = parsedFrontScreen.length ? mapDynamicOptions(parsedFrontScreen, options.frontScreenOptions) : [];
+    const correctBodyIds = parsedBody.length ? mapDynamicOptions(parsedBody, options.bodyOptions) : [];
+    const correctStrapIds = parsedStrap.length ? mapDynamicOptions(parsedStrap, options.strapOptions) : [];
+    const correctBandIds = parsedBand.length ? mapDynamicOptions(parsedBand, options.bandOptions) : [];
+    const correctAccessoriesIds = parsedAccessories.length ? mapDynamicOptions(parsedAccessories, options.accessoriesOptions) : [];
 
+    const watchCaseFinishArray = watchCaseFinish ? watchCaseFinish.split(',') : [];
+    const watchCaseSizeArray = watchCaseSize ? watchCaseSize.split(',') : [];
+    const watchCaseTypeArray = watchCaseType ? watchCaseType.split(',') : [];
+    let watchFinishArray = [];
+
+    if (req.files && req.files.length) {
+      for (let i = 0; i < req.files.length; i++) {
+        const finishName = watchCaseFinishArray[i];
+        const file = req.files[i];
+        const fileName = `${modelName.replace(/\s/g, '_')}_${finishName}_${uuidv4()}`;
+        const imageUrl = await uploadToCloudinary(file, fileName);
+        watchFinishArray.push({ finish: finishName, image: imageUrl });
+      }
+    } else {
+      watchFinishArray = watchCaseFinishArray.map(finish => ({ finish, image: null, }));
+    }
 
     const newWatch = new Watch({
       id: uuidv4(),
@@ -161,601 +148,196 @@ const defaultBandsType = [
       deviceType,
       modelName,
       maxPrice,
-      paymentOptions: paymentOptionsArray,
-      watchCaseType: watchCaseTypeFormatted,
-      watchCaseFinish: caseFinishImagesArray,
-      watchCaseSize: watchCaseSizeFormatted,
-      strapCondition: defaultStrapCondition,
-      cosmeticIssues: defaultCosmeticIssues,
-      batteryHealth: watchBatteryHealthOptions,
-      bandsType: defaultBandsType,
-      faults: defaultFaults,
-      repairs: defaultRepairs,
-      bodyCondition: defaultBodyCondition,
-      accessories: defaultAccessories,
+      watchCaseFinish: watchFinishArray,  
+      watchCaseType: watchCaseTypeArray.map(type => ({ caseType: type, deductionPercentage: 0 })),
+      watchCaseSize: watchCaseSizeArray.map(size => ({ size, deductionPercentage: 0 })),
+      paymentOptions: Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]'),
+      batteryHealth: correctBatteryHealthIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      cosmeticIssues: correctCosmeticIssueIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      faults: correctFaultIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      repairs: correctRepairIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      frontScreen: correctFrontScreenIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      body: correctBodyIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      strap: correctStrapIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      band: correctBandIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      accessories: correctAccessoriesIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      connectivity: correctConnectivityIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
     });
 
     await newWatch.save();
-    res.status(201).json(newWatch);
+    console.log('New Watch saved to MongoDB: ', newWatch);
+    return res.status(201).json(newWatch);
   } catch (error) {
-    console.error('Error adding Watch:', error);
-    res.status(500).json({ message: 'Server Error' });
+    console.error('Error adding new Watch:', error);
+    return res.status(500).json({ message: 'Server Error' });
   }
 });
 
 // Route to update a Watch by ID
-router.put('/:id/device-management', upload.any(), async (req, res) => {
+router.put('/:id', upload.any(), async (req, res) => {
   try {
+    // Fetch options dynamically from their respective collections
+    const options = await fetchOptions();
+
     const {
-      vendor,
-      deviceType,
-      modelName,
-      maxPrice,
-      paymentOptions,
-      watchCaseType,
-      watchCaseFinish,
-      watchCaseSize,
-      bandsType,
-      batteryHealth,
-      cosmeticIssues,
-      strapCondition,
-      faults,
-      repairs,
-      bodyCondition,
-      accessories
+      vendor, deviceType, modelName, maxPrice, watchCaseFinish, watchCaseSize, watchCaseType ,paymentOptions,
+      batteryHealth, cosmeticIssues, connectivity ,faults, repairs, frontScreen, body, strap, accessories, band,
     } = req.body;
 
+    // Find the existing Watch document
     const existingWatch = await Watch.findById(req.params.id);
     if (!existingWatch) {
       return res.status(404).json({ message: 'Watch not found' });
     }
 
-    //Logging received body and files
-    console.log('Received Body: ', req.body);
-    console.log('Received Files: ', req.files);
+    // Parsing the passed data, only if values exist
+    const parsedBatteryHealth = batteryHealth ? safeParse(batteryHealth) : existingWatch.batteryHealth.map(opt => opt.option);
+    const parsedCosmeticIssues = cosmeticIssues ? safeParse(cosmeticIssues) : existingWatch.cosmeticIssues.map(opt => opt.option);
+    const parsedConnectivity = connectivity ? safeParse(connectivity) : existingWatch.connectivity.map(opt => opt.option);
+    const parsedFaults = faults ? safeParse(faults) : existingWatch.faults.map(opt => opt.option);
+    const parsedRepairs = repairs ? safeParse(repairs) : existingWatch.repairs.map(opt => opt.option);
+    const parsedFrontScreen = frontScreen ? safeParse(frontScreen) : existingWatch.frontScreen.map(opt => opt.option);
+    const parsedBody = body ? safeParse(body) : existingWatch.body.map(opt => opt.option);
+    const parsedStrap = strap ? safeParse(strap) : existingWatch.strap.map(opt => opt.option);
+    const parsedBand = band ? safeParse(band) : existingWatch.band.map(opt => opt.option);
+    const parsedAccessories = accessories ? safeParse(accessories) : existingWatch.accessories.map(opt => opt.option);
 
-        // Filter battery health based on Apple Watch modelName
-const filterBatteryHealthOptionsForWatches = (modelName) => {
-  const allOptions = [
-    { health: '95% or Above', deductionPercentage: 0 },
-    { health: '90% or Above', deductionPercentage: 0 },
-    { health: '85% or Above', deductionPercentage: 0 },
-    { health: '80% or Above', deductionPercentage: 0 },
-    { health: 'Less than 80%', deductionPercentage: 0 },
-  ];
-
-  if (['Apple Watch Ultra 2 (2023)', 'Apple Watch Series 9 (2023)', 'Apple Watch Ultra (2022)'].includes(modelName)) {
-    return allOptions.filter((option) => ['95% or Above', '90% or Above', '85% or Above'].includes(option.health));
-  } else if (['Apple Watch Series 7 (2021)', 'Apple Watch Series 8 (2022)'].includes(modelName)) {
-    return allOptions.filter((option) => ['90% or Above', '85% or Above', '80% or Above'].includes(option.health));
-  } else {
-    return allOptions.filter((option) => ['85% or Above', '80% or Above', 'Less than 80%'].includes(option.health));
-  }
-};
-
-// Apply the filtered battery health options based on the Watch model name
-const watchBatteryHealthOptions = filterBatteryHealthOptionsForWatches(modelName);
+    // Mapping the parsed data to correct ObjectIds, only if the field exists
+    const correctBatteryHealthIds = parsedBatteryHealth.length ? mapDynamicOptions(parsedBatteryHealth, options.batteryHealthOptions) : existingWatch.batteryHealth.map(opt => opt.option);
+    const correctCosmeticIssueIds = parsedCosmeticIssues.length ? mapDynamicOptions(parsedCosmeticIssues, options.cosmeticIssuesOptions) : existingWatch.cosmeticIssues.map(opt => opt.option);
+    const correctFaultIds = parsedFaults.length ? mapDynamicOptions(parsedFaults, options.faultsOptions) : existingWatch.faults.map(opt => opt.option);
+    const correctRepairIds = parsedRepairs.length ? mapDynamicOptions(parsedRepairs, options.repairsOptions) : existingWatch.repairs.map(opt => opt.option);
+    const correctFrontScreenIds = parsedFrontScreen.length ? mapDynamicOptions(parsedFrontScreen, options.frontScreenOptions) : existingWatch.frontScreen.map(opt => opt.option);
+    const correctBodyIds = parsedBody.length ? mapDynamicOptions(parsedBody, options.bodyOptions) : existingWatch.body.map(opt => opt.option);
+    const correctStrapIds = parsedStrap.length ? mapDynamicOptions(parsedStrap, options.strapOptions) : existingWatch.strap.map(opt => opt.option);
+    const correctBandIds = parsedBand.length ? mapDynamicOptions(parsedBand, options.bandOptions) : existingWatch.band.map(opt => opt.option);
+    const correctAccessoriesIds = parsedAccessories.length ? mapDynamicOptions(parsedAccessories, options.accessoriesOptions) : existingWatch.accessories.map(opt => opt.option);
+    const correctConnectivityIds = parsedConnectivity.length ? mapDynamicOptions(parsedConnectivity, options.connectivityOptions) : existingWatch.connectivity.map(opt => opt.option);
 
 
-const defaultCosmeticIssues = [
-  { header: 'Damaged Display', condition: 'Front glass is cracked or shattered', deductionPercentage: 0 },
-  { header: 'Damaged Body', condition: 'Watch body is cracked/bent/broken or heavily dented', deductionPercentage: 0 },
-];
+    if (vendor) {
+      existingWatch.vendor = vendor;
+    }
+    if (deviceType) {
+      existingWatch.deviceType = deviceType;
+    }
+    if (modelName) {
+      existingWatch.modelName = modelName;
+    }
+    if (maxPrice) {
+      existingWatch.maxPrice = maxPrice;
+    }
 
-const defaultStrapCondition = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible wear and tear or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no deep wear and tear', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible signs of usage, 1 - 2 minor deep wear and tear', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Torn out, noticeable deep wear and tear', deductionPercentage: 0 },
-];
+    // Handle colors and image uploads
+    if (watchCaseFinish) {
+      const finishArray = watchCaseFinish.split(',');
+      const updatedFinish = await Promise.all(finishArray.map(async (finish) => {
+        const existingFinish = existingWatch.watchCaseFinish.find(c => c.finish === finish);
+        const uploadedImage = req.files.find(file => file.feildname === `images_${finish}`);
+        let imageUrl = existingFinish?.image || '';
+        if (uploadedImage) {
+          const fileName = `${modelName.replace(/\s/g, '_')}_${finish}_${uuidv4()}`;
+          imageUrl = await uploadToCloudinary(uploadedImage, fileName);
+        }
+        return { finish, image: imageUrl };
+      }));
+      existingWatch.watchCaseFinish = updatedFinish;
+    }
 
-const defaultBodyCondition = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no scuffs or dents', deductionPercentage: 0 },
-      { header: 'Fair', condition: 'Visible scratches, 1 - 2 minor scuffs or dents', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, noticeable scuffs or dents', deductionPercentage: 0 },
-];
+    // Handle storage sizes
+    if (watchCaseSize) {
+      const sizeArray = Array.isArray(watchCaseSize) ? watchCaseSize : watchCaseSize.split(',');
+      existingWatch.watchCaseSize = sizeArray.map(size => ({
+        size,
+        deductionPercentage: 0
+      }));
+    }
 
-const defaultFaults = [
-  { header: 'Faulty Display', condition: 'Dead Pixels/Lines', deductionPercentage: 0 },
-  { header: 'Faulty Side Button', condition: 'Not Working/Sticky', deductionPercentage: 0 },
-  { header: 'Faulty Battery', condition: 'Drains Quickly', deductionPercentage: 0 },
-  { header: 'Faulty Speaker', condition: 'No Sound/Static', deductionPercentage: 0 },
-  { header: 'Faulty Microphone', condition: 'No Sound/Static', deductionPercentage: 0 },
-  { header: 'Faulty Bluetooth', condition: 'Not Connecting', deductionPercentage: 0 },
-  { header: 'Faulty Wi-Fi', condition: 'Not Connecting', deductionPercentage: 0 },
-  { header: 'Faulty GPS', condition: 'Not Connecting', deductionPercentage: 0 },
-  { header: 'Faulty Optical Heart Sensor', condition: 'Not Working', deductionPercentage: 0 },
-  { header: 'Faulty ECG', condition: 'Not Working', deductionPercentage: 0 },
-  { header: 'Faulty Compass', condition: 'Not Working', deductionPercentage: 0 },
-  { header: 'Faulty Gyroscope', condition: 'Not Working', deductionPercentage: 0 },
-  { header: 'Faulty Digital Crown', condition: 'Not Working', deductionPercentage: 0 },
-];
+    // Handle case types
+    if (watchCaseType) {
+      const typeArray = Array.isArray(watchCaseType) ? watchCaseType : watchCaseType.split(',');
+      existingWatch.watchCaseType = typeArray.map(caseType => ({
+        caseType,
+        deductionPercentage: 0
+      }));
+    }
 
-const defaultRepairs = [
-  { repair: 'Screen Replaced', deductionPercentage: 0 },
-  { repair: 'Battery Replaced', deductionPercentage: 0 },
-  { repair: 'Body Replaced', deductionPercentage: 0 },
-  { repair: 'Speaker Replaced', deductionPercentage: 0 },
-  { repair: 'Microphone Replaced', deductionPercentage: 0 },
-  { repair: 'Bluetooth Replaced', deductionPercentage: 0 },
-  { repair: 'Wi-Fi Replaced', deductionPercentage: 0 },
-  { repair: 'Other Repairs', deductionPercentage: 0 }
-];
+    if (paymentOptions) {
+      existingWatch.paymentOptions = Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]');
+    }
 
-const defaultAccessories = [
-  { option: 'Everything (Complete Box)', deductionPercentage: 0 },
-  { option: 'Box Only', deductionPercentage: 0 },
-  { option: 'Watch Only', deductionPercentage: 0 },
-];
-
-const defaultBandsType = [
-  { option: 'Original Band', deductionPercentage: 0 },
-  { option: 'Aftermarket Band', deductionPercentage: 0 },
-];
-
-    // Update basic fields
-    if (vendor) existingWatch.vendor = vendor;
-    if (deviceType) existingWatch.deviceType = deviceType;
-    if (modelName) existingWatch.modelName = modelName;
-    if (maxPrice) existingWatch.maxPrice = maxPrice;
-
-            const updateDeductionsIfZero = (existing, incoming, defaults) => {
-      // If incoming data is missing, use defaults
-      if (!incoming || !Array.isArray(incoming)) return defaults;
-
-      // If the incoming data exists, but is missing key fields (like header/condition), replace them
-      return incoming.map((item, index) => {
-        const defaultItem = defaults[index] || {};
+    // Update deduction fields but retain the non-zero deduction percentages
+    const updateDeductionField = (existingField, newOptions) => {
+      return newOptions.map(optionId => {
+        const existingOption = existingField.find(opt => opt.option.toString() === optionId.toString());
         return {
-          ...defaultItem, // Use defaults as base
-          ...item, // Override with incoming data if exists
-          deductionPercentage: item.deductionPercentage || (existing[index]?.deductionPercentage || 0),
+          option: optionId,
+          deductionPercentage: existingOption && existingOption.deductionPercentage !== 0 
+            ? existingOption.deductionPercentage  // Keep the non-zero deduction percentage
+            : 0  // Set to 0 if it's a new entry or the current value is 0
         };
       });
     };
 
-    // Handle payment options
-    if (paymentOptions) {
-      const paymentOptionsArray = Array.isArray(paymentOptions)
-        ? paymentOptions
-        : JSON.parse(paymentOptions || '[]');
-      existingWatch.paymentOptions = paymentOptionsArray.map(option => ({
-        option: option.option,
-        deductionPercentage: option.deductionPercentage || 0
-      }));
-    }
-
-    // Handle watch case type
-    if (watchCaseType) {
-      const watchCaseTypeArray = Array.isArray(watchCaseType)
-        ? watchCaseType
-        : typeof watchCaseType === 'string'
-        ? [watchCaseType]
-        : JSON.parse(watchCaseType);
-      existingWatch.watchCaseType = watchCaseTypeArray.map(type => ({
-        caseType: type.caseType || type,
-        deductionPercentage: type.deductionPercentage || 0
-      }));
-    }
-
-    // Handle image uploads for watch case finish
-    if (watchCaseFinish) {
-      const watchCaseFinishArray = watchCaseFinish.split(',');
-
-      const updatedCaseFinishImages = await Promise.all(watchCaseFinishArray.map(async (finish) => {
-        const existingFinish = existingWatch.watchCaseFinish.find(c => c.finish === finish);
-        const uploadedImage = req.files.find(file => file.fieldname === `images_${finish}`);
-
-        console.log(`Processing Finish: ${finish}, existingFinish: ${existingFinish ? existingFinish.finish : 'N/A'}`);
-
-        let imageUrl = existingFinish?.image;
-
-        if (uploadedImage) {
-          console.log(`Uploading image for finish: ${finish}`);
-          const fileName = `${modelName.replace(/\s/g, '_')}_${finish}_${uuidv4()}`;
-          imageUrl = await uploadToCloudinary(uploadedImage, fileName);
-          console.log(`Uploaded image for finish: ${finish}`);
-        }
-        return { finish, image: imageUrl };
-      }))
-      existingWatch.watchCaseFinish = updatedCaseFinishImages;
-    }
-
-    // Handle watch case size
-    if (watchCaseSize) {
-      const watchCaseSizesArray = Array.isArray(watchCaseSize) ? watchCaseSize : watchCaseSize.split(',');
-      existingWatch.watchCaseSize = watchCaseSizesArray.map(size => ({
-        size: typeof size === 'object' ? size.size :size,
-        deductionPercentage: size.deductionPercentage || 0,
-      }));
-    }
-
-    // Update bands type
-        if (bandsType) {
-      const bandsTypeArray = Array.isArray(bandsType)
-        ? bandsType
-        : typeof bandsType === 'string'
-        ? [bandsType]
-        : JSON.parse(bandsType);
-      existingWatch.bandsType = bandsTypeArray.map(type => ({
-        option: type.option || type,
-        deductionPercentage: type.deductionPercentage || 0
-      }));
-    }
-
-    // Update battery health
-    if (batteryHealth) {
-      existingWatch.batteryHealth = batteryHealth.map(health => ({
-        health: health.health || health,
-        deductionPercentage: health.deductionPercentage || 0
-      }));
-    }
-
-    // Update cosmetic issues
-    if (cosmeticIssues) {
-      existingWatch.cosmeticIssues = cosmeticIssues.map(issue => ({
-        header: issue.header || issue,
-        condition: issue.condition || '',
-        deductionPercentage: issue.deductionPercentage || 0,
-        image: issue.image || ''
-      }));
-    }
-
-    // Update strap condition
-    if (strapCondition) {
-      existingWatch.strapCondition = strapCondition.map(strap => ({
-        header: strap.header || strap,
-        condition: strap.condition || '',
-        deductionPercentage: strap.deductionPercentage || 0,
-        image: strap.image || ''
-      }));
-    }
-
-    // Update faults
-    if (faults) {
-      existingWatch.faults = faults.map(fault => ({
-        header: fault.header || fault,
-        condition: fault.condition || '',
-        deductionPercentage: fault.deductionPercentage || 0,
-        image: fault.image || ''
-      }));
-    }
-
-    // Update repairs
-    if (repairs) {
-      existingWatch.repairs = repairs.map(repair => ({
-        repair: repair.repair || repair,
-        deductionPercentage: repair.deductionPercentage || 0,
-        image: repair.image || ''
-      }));
-    }
-
-    // Update body condition
-    if (bodyCondition) {
-      existingWatch.bodyCondition = bodyCondition.map(body => ({
-        header: body.header || body,
-        condition: body.condition || '',
-        deductionPercentage: body.deductionPercentage || 0,
-        image: body.image || ''
-      }));
-    }
-
-    // Update accessories
-    if (accessories) {
-      existingWatch.accessories = accessories.map(accessory => ({
-        option: accessory.option || accessory,
-        deductionPercentage: accessory.deductionPercentage || 0,
-        image: accessory.image || ''
-      }));
-    }
-
-    existingWatch.batteryHealth = updateDeductionsIfZero(existingWatch.batteryHealth, batteryHealth, watchBatteryHealthOptions);
-    existingWatch.cosmeticIssues = updateDeductionsIfZero(existingWatch.cosmeticIssues, cosmeticIssues, defaultCosmeticIssues);
-    existingWatch.strapCondition = updateDeductionsIfZero(existingWatch.strapCondition, strapCondition, defaultStrapCondition);
-    existingWatch.faults = updateDeductionsIfZero(existingWatch.faults, faults, defaultFaults);
-    existingWatch.repairs = updateDeductionsIfZero(existingWatch.repairs, repairs, defaultRepairs);
-    existingWatch.bodyCondition = updateDeductionsIfZero(existingWatch.bodyCondition, bodyCondition, defaultBodyCondition);
-    existingWatch.accessories = updateDeductionsIfZero(existingWatch.accessories, accessories, defaultAccessories);
-    existingWatch.bandsType = updateDeductionsIfZero(existingWatch.bandsType, bandsType, defaultBandsType);
+    existingWatch.batteryHealth = updateDeductionField(existingWatch.batteryHealth, correctBatteryHealthIds);
+    existingWatch.cosmeticIssues = updateDeductionField(existingWatch.cosmeticIssues, correctCosmeticIssueIds);
+    existingWatch.faults = updateDeductionField(existingWatch.faults, correctFaultIds);
+    existingWatch.repairs = updateDeductionField(existingWatch.repairs, correctRepairIds);
+    existingWatch.frontScreen = updateDeductionField(existingWatch.frontScreen, correctFrontScreenIds);
+    existingWatch.body = updateDeductionField(existingWatch.body, correctBodyIds);
+    existingWatch.strap = updateDeductionField(existingWatch.strap, correctStrapIds);
+    existingWatch.band = updateDeductionField(existingWatch.band, correctBandIds);
+    existingWatch.connectivity = updateDeductionField(existingWatch.connectivity, correctConnectivityIds);
+    existingWatch.accessories = updateDeductionField(existingWatch.accessories, correctAccessoriesIds);
 
     // Save the updated Watch document
     const updatedWatch = await existingWatch.save();
-    res.json(updatedWatch);
+    return res.json(updatedWatch);  // Return the updated Watch
+
   } catch (error) {
     console.error('Error updating Watch:', error);
-    res.status(500).json({ message: 'Server Error' });
+    return res.status(500).json({ message: 'Server Error' });
   }
 });
 
-router.put('/:id/device-details', upload.any(), async (req, res) => {
+router.put('/:id/device-details', async (req, res) => {
   try {
-    const {
-      vendor,
-      deviceType,
-      modelName,
-      maxPrice,
-      paymentOptions,
-      watchCaseType,
-      watchCaseFinish,
-      watchCaseSize,
-      bandsType,
-      batteryHealth,
-      cosmeticIssues,
-      strapCondition,
-      faults,
-      repairs,
-      bodyCondition,
-      accessories
-    } = req.body;
+    const watchId = req.params.id;
+    const updateFields = req.body;  // Contains the updated deduction percentages for specific categories
+    console.log('Received updateFields:', updateFields);
 
-    const existingWatch = await Watch.findById(req.params.id);
-    if (!existingWatch) {
+    // Fetch the Watch document from the database
+    const fetchedWatch = await Watch.findById(watchId);
+    if (!fetchedWatch) {
       return res.status(404).json({ message: 'Watch not found' });
     }
 
-    //Logging received body and files
-    console.log('Received Body: ', req.body);
-    console.log('Received Files: ', req.files);
+    // Log the existing fetchedWatch document for debugging
+    console.log('Existing Watch Document:', fetchedWatch);
 
-        // Filter battery health based on Apple Watch modelName
-const filterBatteryHealthOptionsForWatches = (modelName) => {
-  const allOptions = [
-    { health: '95% or Above', deductionPercentage: 0 },
-    { health: '90% or Above', deductionPercentage: 0 },
-    { health: '85% or Above', deductionPercentage: 0 },
-    { health: '80% or Above', deductionPercentage: 0 },
-    { health: 'Less than 80%', deductionPercentage: 0 },
-  ];
+    // Iterate over each category (like batteryHealth, cosmeticIssues, etc.) in updateFields
+    for (const category in updateFields) {
+      if (Array.isArray(updateFields[category])) {
+        updateFields[category].forEach(updatedOption => {
+          console.log('Updating category:', category, 'with option:', updatedOption);
 
-  if (['Apple Watch Ultra 2 (2023)', 'Apple Watch Series 9 (2023)', 'Apple Watch Ultra (2022)'].includes(modelName)) {
-    return allOptions.filter((option) => ['95% or Above', '90% or Above', '85% or Above'].includes(option.health));
-  } else if (['Apple Watch Series 7 (2021)', 'Apple Watch Series 8 (2022)'].includes(modelName)) {
-    return allOptions.filter((option) => ['90% or Above', '85% or Above', '80% or Above'].includes(option.health));
-  } else {
-    return allOptions.filter((option) => ['85% or Above', '80% or Above', 'Less than 80%'].includes(option.health));
-  }
-};
+          // Find the corresponding option in the existing fetchedWatch document
+          const existingOption = fetchedWatch[category].find(option => option._id.toString() === updatedOption._id.toString());
 
-// Apply the filtered battery health options based on the Watch model name
-const watchBatteryHealthOptions = filterBatteryHealthOptionsForWatches(modelName);
-
-
-const defaultCosmeticIssues = [
-  { header: 'Damaged Display', condition: 'Front glass is cracked or shattered', deductionPercentage: 0 },
-  { header: 'Damaged Body', condition: 'Watch body is cracked/bent/broken or heavily dented', deductionPercentage: 0 },
-];
-
-const defaultStrapCondition = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible wear and tear or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no deep wear and tear', deductionPercentage: 0},
-      { header: 'Fair', condition: 'Visible signs of usage, 1 - 2 minor deep wear and tear', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Torn out, noticeable deep wear and tear', deductionPercentage: 0 },
-];
-
-const defaultBodyCondition = [
-      { header: 'Excellent', condition: '1 - 2 hardly visible scratches or minimal signs of use', deductionPercentage: 0 },
-      { header: 'Good', condition: 'Some visible signs of usage, but no scuffs or dents', deductionPercentage: 0 },
-      { header: 'Fair', condition: 'Visible scratches, 1 - 2 minor scuffs or dents', deductionPercentage: 0 },
-      { header: 'Acceptable', condition: 'Too many scratches, noticeable scuffs or dents', deductionPercentage: 0 },
-];
-
-const defaultFaults = [
-  { header: 'Faulty Display', condition: 'Dead Pixels/Lines', deductionPercentage: 0 },
-  { header: 'Faulty Side Button', condition: 'Not Working/Sticky', deductionPercentage: 0 },
-  { header: 'Faulty Battery', condition: 'Drains Quickly', deductionPercentage: 0 },
-  { header: 'Faulty Speaker', condition: 'No Sound/Static', deductionPercentage: 0 },
-  { header: 'Faulty Microphone', condition: 'No Sound/Static', deductionPercentage: 0 },
-  { header: 'Faulty Bluetooth', condition: 'Not Connecting', deductionPercentage: 0 },
-  { header: 'Faulty Wi-Fi', condition: 'Not Connecting', deductionPercentage: 0 },
-  { header: 'Faulty GPS', condition: 'Not Connecting', deductionPercentage: 0 },
-  { header: 'Faulty Optical Heart Sensor', condition: 'Not Working', deductionPercentage: 0 },
-  { header: 'Faulty ECG', condition: 'Not Working', deductionPercentage: 0 },
-  { header: 'Faulty Compass', condition: 'Not Working', deductionPercentage: 0 },
-  { header: 'Faulty Gyroscope', condition: 'Not Working', deductionPercentage: 0 },
-  { header: 'Faulty Digital Crown', condition: 'Not Working', deductionPercentage: 0 },
-];
-
-const defaultRepairs = [
-  { repair: 'Screen Replaced', deductionPercentage: 0 },
-  { repair: 'Battery Replaced', deductionPercentage: 0 },
-  { repair: 'Body Replaced', deductionPercentage: 0 },
-  { repair: 'Speaker Replaced', deductionPercentage: 0 },
-  { repair: 'Microphone Replaced', deductionPercentage: 0 },
-  { repair: 'Bluetooth Replaced', deductionPercentage: 0 },
-  { repair: 'Wi-Fi Replaced', deductionPercentage: 0 },
-  { repair: 'Other Repairs', deductionPercentage: 0 }
-];
-
-const defaultAccessories = [
-  { option: 'Everything (Complete Box)', deductionPercentage: 0 },
-  { option: 'Box Only', deductionPercentage: 0 },
-  { option: 'Watch Only', deductionPercentage: 0 },
-];
-
-const defaultBandsType = [
-  { option: 'Original Band', deductionPercentage: 0 },
-  { option: 'Aftermarket Band', deductionPercentage: 0 },
-];
-
-    // Update basic fields
-    if (vendor) existingWatch.vendor = vendor;
-    if (deviceType) existingWatch.deviceType = deviceType;
-    if (modelName) existingWatch.modelName = modelName;
-    if (maxPrice) existingWatch.maxPrice = maxPrice;
-
-    const updateDeductionsIfZero = (existing = [], incoming = [], defaults = []) => {
-  if (!incoming || !Array.isArray(incoming) || incoming.length === 0) {
-    // Return existing if available, otherwise use defaults
-    return existing.length > 0 ? existing : defaults;
-  }
-
-  return incoming.map((item, index) => {
-    const defaultItem = defaults[index] || {}; // Use defaults if no incoming or existing
-    const existingItem = existing[index] || {}; // Use existing data if available
-
-    return {
-      ...defaultItem,  // Default as base
-      ...existingItem,  // Preserve existing data
-      ...item,  // Override with incoming data
-      deductionPercentage: item.deductionPercentage !== undefined 
-        ? item.deductionPercentage 
-        : (existingItem.deductionPercentage !== undefined
-          ? existingItem.deductionPercentage
-          : defaultItem.deductionPercentage || 0)  // Fallback to default or zero
-    };
-  });
-};
-
-    // Handle payment options
-    if (paymentOptions) {
-      const paymentOptionsArray = Array.isArray(paymentOptions)
-        ? paymentOptions
-        : JSON.parse(paymentOptions || '[]');
-      existingWatch.paymentOptions = paymentOptionsArray.map(option => ({
-        option: option.option,
-        deductionPercentage: option.deductionPercentage || 0
-      }));
+          if (existingOption) {
+            // Update the deduction percentage for the matched option
+            existingOption.deductionPercentage = updatedOption.deductionPercentage;
+          }
+        });
+      }
     }
 
-    // Handle watch case type
-    if (watchCaseType) {
-      const watchCaseTypeArray = Array.isArray(watchCaseType)
-        ? watchCaseType
-        : typeof watchCaseType === 'string'
-        ? [watchCaseType]
-        : JSON.parse(watchCaseType);
-      existingWatch.watchCaseType = watchCaseTypeArray.map(type => ({
-        caseType: type.caseType || type,
-        deductionPercentage: type.deductionPercentage || 0
-      }));
-    }
+    // Save the updated fetchedWatch document
+    await fetchedWatch.save();
 
-    // Handle image uploads for watch case finish
-    if (watchCaseFinish) {
-      const watchCaseFinishArray = watchCaseFinish.split(',');
-
-      const updatedCaseFinishImages = await Promise.all(watchCaseFinishArray.map(async (finish) => {
-        const existingFinish = existingWatch.watchCaseFinish.find(c => c.finish === finish);
-        const uploadedImage = req.files.find(file => file.feildname === `images_${finish}`);
-
-        console.log(`Processing Finish: ${finish}, existingFinish: ${existingFinish ? existingFinish.finish : 'N/A'}`);
-
-        let imageUrl = existingFinish?.image;
-
-        if (uploadedImage) {
-          console.log(`Uploading image for finish: ${finish}`);
-          const fileName = `${modelName.replace(/\s/g, '_')}_${finish}_${uuidv4()}`;
-          imageUrl = await uploadToCloudinary(uploadedImage, fileName);
-          console.log(`Uploaded image for finish: ${finish}`);
-        }
-        return { finish, image: imageUrl };
-      }))
-      existingWatch.watchCaseFinish = updatedCaseFinishImages;
-    }
-
-    // Handle watch case size
-    if (watchCaseSize) {
-      const watchCaseSizesArray = Array.isArray(watchCaseSize) ? watchCaseSize : watchCaseSize.split(',');
-      existingWatch.watchCaseSize = watchCaseSizesArray.map(size => ({
-        size: typeof size === 'object' ? size.size :size,
-        deductionPercentage: size.deductionPercentage || 0,
-      }));
-    }
-
-    // Update bands type
-        if (bandsType) {
-      const bandsTypeArray = Array.isArray(bandsType)
-        ? bandsType
-        : typeof bandsType === 'string'
-        ? [bandsType]
-        : JSON.parse(bandsType);
-      existingWatch.bandsType = bandsTypeArray.map(type => ({
-        option: type.option || type,
-        deductionPercentage: type.deductionPercentage || 0
-      }));
-    }
-
-    // Update battery health
-    if (batteryHealth) {
-      existingWatch.batteryHealth = batteryHealth.map(health => ({
-        health: health.health || health,
-        deductionPercentage: health.deductionPercentage || 0
-      }));
-    }
-
-    // Update cosmetic issues
-    if (cosmeticIssues) {
-      existingWatch.cosmeticIssues = cosmeticIssues.map(issue => ({
-        header: issue.header || issue,
-        condition: issue.condition || '',
-        deductionPercentage: issue.deductionPercentage || 0,
-        image: issue.image || ''
-      }));
-    }
-
-    // Update strap condition
-    if (strapCondition) {
-      existingWatch.strapCondition = strapCondition.map(strap => ({
-        header: strap.header || strap,
-        condition: strap.condition || '',
-        deductionPercentage: strap.deductionPercentage || 0,
-        image: strap.image || ''
-      }));
-    }
-
-    // Update faults
-    if (faults) {
-      existingWatch.faults = faults.map(fault => ({
-        header: fault.header || fault,
-        condition: fault.condition || '',
-        deductionPercentage: fault.deductionPercentage || 0,
-        image: fault.image || ''
-      }));
-    }
-
-    // Update repairs
-    if (repairs) {
-      existingWatch.repairs = repairs.map(repair => ({
-        repair: repair.repair || repair,
-        deductionPercentage: repair.deductionPercentage || 0,
-        image: repair.image || ''
-      }));
-    }
-
-    // Update body condition
-    if (bodyCondition) {
-      existingWatch.bodyCondition = bodyCondition.map(body => ({
-        header: body.header || body,
-        condition: body.condition || '',
-        deductionPercentage: body.deductionPercentage || 0,
-        image: body.image || ''
-      }));
-    }
-
-    // Update accessories
-    if (accessories) {
-      existingWatch.accessories = accessories.map(accessory => ({
-        option: accessory.option || accessory,
-        deductionPercentage: accessory.deductionPercentage || 0,
-        image: accessory.image || ''
-      }));
-    }
-
-    existingWatch.batteryHealth = updateDeductionsIfZero(existingWatch.batteryHealth, batteryHealth, watchBatteryHealthOptions);
-    existingWatch.cosmeticIssues = updateDeductionsIfZero(existingWatch.cosmeticIssues, cosmeticIssues, defaultCosmeticIssues);
-    existingWatch.strapCondition = updateDeductionsIfZero(existingWatch.strapCondition, strapCondition, defaultStrapCondition);
-    existingWatch.faults = updateDeductionsIfZero(existingWatch.faults, faults, defaultFaults);
-    existingWatch.repairs = updateDeductionsIfZero(existingWatch.repairs, repairs, defaultRepairs);
-    existingWatch.bodyCondition = updateDeductionsIfZero(existingWatch.bodyCondition, bodyCondition, defaultBodyCondition);
-    existingWatch.accessories = updateDeductionsIfZero(existingWatch.accessories, accessories, defaultAccessories);
-    existingWatch.bandsType = updateDeductionsIfZero(existingWatch.bandsType, bandsType, defaultBandsType);
-
-    // Save the updated Watch document
-    const updatedWatch = await existingWatch.save();
-    res.json(updatedWatch);
+    res.json(fetchedWatch);  // Return the updated document to the frontend
   } catch (error) {
-    console.error('Error updating Watch:', error);
+    console.error('Error updating Watch details:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 });
@@ -763,20 +345,39 @@ const defaultBandsType = [
 // Route to get all Watches or fetch by ID
 router.get('/', async (req, res) => {
   try {
-    const id = req.query.id;
+    const id = req.query.id; // Get the id from query parameters
+
     if (id) {
-      const fetchedWatch = await Watch.findOne({ id: id });
+      console.log(`Fetching Watch with ID: ${id}`);
+
+      // Fetch Watch data and populate the option fields with actual data by _id
+      const fetchedWatch = await Watch
+        .findById(id)
+        .populate('batteryHealth.option', 'option')
+        .populate('cosmeticIssues.option', 'header condition')
+        .populate('faults.option', 'header condition')
+        .populate('repairs.option', 'option')
+        .populate('frontScreen.option', 'header condition')
+        .populate('body.option', 'header condition')
+        .populate('strap.option', 'header condition')
+        .populate('band.option', 'option')
+        .populate('connectivity.option', 'option')
+        .populate('accessories.option', 'option')
+
+      console.log('Populated Watch data:', JSON.stringify(fetchedWatch, null, 2));
+
       if (fetchedWatch) {
         res.json(fetchedWatch);
       } else {
         res.status(404).json({ message: 'Watch not found' });
       }
     } else {
-      const watches = await Watch.find();
-      res.json(watches);
+      // Fetch all Watchs if no ID is provided
+      const Watchs = await Watch.find();
+      res.json(Watchs);
     }
   } catch (error) {
-    console.error('Error retrieving Watch:', error);
+    console.error('Error retrieving Watchs:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 });
@@ -785,12 +386,26 @@ router.get('/', async (req, res) => {
 router.get('/:modelName', async (req, res) => {
   try {
     const modelName = req.params.modelName;
-    const fetchedWatch = await Watch.findOne({ modelName });
-    if (fetchedWatch) {
-      res.json(fetchedWatch);
-    } else {
-      res.status(404).json({ message: 'Watch not found' });
+
+    // Fetch Watch data and populate the option fields with actual data
+    const fetchedWatch = await Watch
+      .findOne({ modelName })
+        .populate('batteryHealth.option', 'option')
+        .populate('cosmeticIssues.option', 'header condition')
+        .populate('faults.option', 'header condition')
+        .populate('repairs.option', 'option')
+        .populate('frontScreen.option', 'header condition')
+        .populate('body.option', 'header condition')
+        .populate('strap.option', 'header condition')
+        .populate('band.option', 'option')
+        .populate('connectivity.option', 'option')
+        .populate('accessories.option', 'option')
+
+    if (!fetchedWatch) {
+      return res.status(404).json({ message: 'Watch not found' });
     }
+
+    res.json(fetchedWatch);
   } catch (error) {
     console.error('Error retrieving Watch:', error);
     res.status(500).json({ message: 'Server Error' });
@@ -802,10 +417,7 @@ router.delete('/:id', async (req, res) => {
   try {
     const id = req.params.id;
     const deletedWatch = await Watch.findByIdAndDelete(id);
-    if (!deletedWatch) {
-      return res.status(404).json({ message: 'Watch not found' });
-    }
-    res.json({ message: 'Watch deleted successfully' });
+    return deletedWatch ? res.json({ message: 'Watch deleted successfully' }) : res.status(404).json({ message: 'Watch not found' });
   } catch (error) {
     console.error('Error deleting Watch:', error);
     res.status(500).json({ message: 'Server Error' });
