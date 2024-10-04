@@ -15,12 +15,17 @@ router.post('/', async (req, res) => {
 
 // Get all Accessories Options
 router.get('/', async (req, res) => {
-    try {
-        const options = await Accessories.find();
-        res.json(options);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  try {
+    const { deviceType } = req.query; // Fetch the deviceType from query parameters
+
+    // If deviceType is provided, filter by it, otherwise return all options
+    const filter = deviceType ? { deviceType } : {};
+    const options = await Accessories.find(filter);
+
+    res.json(options);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 // Update an Accessories Option

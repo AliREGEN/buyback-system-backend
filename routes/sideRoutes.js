@@ -15,12 +15,17 @@ router.post('/', async (req, res) => {
 
 // Get all Side Options
 router.get('/', async (req, res) => {
-    try {
-        const options = await Side.find();
-        res.json(options);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  try {
+    const { deviceType } = req.query; // Fetch the deviceType from query parameters
+
+    // If deviceType is provided, filter by it, otherwise return all options
+    const filter = deviceType ? { deviceType } : {};
+    const options = await Side.find(filter);
+
+    res.json(options);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 // Update a Side Option

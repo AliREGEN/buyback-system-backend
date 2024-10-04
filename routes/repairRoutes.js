@@ -15,12 +15,17 @@ router.post('/', async (req, res) => {
 
 // Get all Repair Options
 router.get('/', async (req, res) => {
-    try {
-        const options = await Repair.find();
-        res.json(options);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  try {
+    const { deviceType } = req.query; // Fetch the deviceType from query parameters
+
+    // If deviceType is provided, filter by it, otherwise return all options
+    const filter = deviceType ? { deviceType } : {};
+    const options = await Repair.find(filter);
+
+    res.json(options);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 // Update a Repair Option
