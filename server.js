@@ -25,7 +25,7 @@ app.use('/api/ipads', require('./routes/ipadRoutes'));
 app.use('/api/samsung', require('./routes/samsungRoutes'));
 app.use('/api/macbooks', require('./routes/macbookRoutes'));
 app.use('/api/watches', require('./routes/watchRoutes'));
-app.use('/api/iphone-presets', require('./routes/iphonePresetRoutes'));
+app.use('/api/presets', require('./routes/presetRoutes'));
 
 // Newly added routes for options
 app.use('/api/battery-health', require('./routes/batteryHealthRoutes'));
