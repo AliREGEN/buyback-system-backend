@@ -66,6 +66,7 @@ const InspectionSchema = new mongoose.Schema({
   simOption: { type: String },
   connectivity: { type: String },
   batteryHealth: { type: String },
+  activatedSince: { type: String },
   isFaulty: { type: String },
   faults: { type: [FaultOptionSchema] },
   isRepaired: { type: String },

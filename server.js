@@ -29,6 +29,7 @@ app.use('/api/presets', require('./routes/presetRoutes'));
 
 // Newly added routes for options
 app.use('/api/battery-health', require('./routes/batteryHealthRoutes'));
+app.use('/api/activated-since', require('./routes/activatedSinceRoutes'));
 app.use('/api/cosmetic-issues', require('./routes/cosmeticIssueRoutes'));
 app.use('/api/processor-types', require('./routes/processorRoutes'));
 app.use('/api/faults', require('./routes/faultRoutes'));

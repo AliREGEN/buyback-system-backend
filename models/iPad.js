@@ -27,9 +27,9 @@ const iPadSchema = new mongoose.Schema({
       deductionPercentage: { type: Number, default: 0 },
     },
   ],
-    batteryHealth: [
+  activatedSince: [
     {
-      option: { type: mongoose.Schema.Types.ObjectId, ref: 'BatteryHealthOption', _id: false },
+      option: { type: mongoose.Schema.Types.ObjectId, ref: 'ActivatedSinceOption', _id: false },
       deductionPercentage: { type: Number, default: 0 },
     },
   ],
