@@ -51,9 +51,11 @@ const ApplePencilSchema = new mongoose.Schema({
 
 // Main Inspection Schema
 const InspectionSchema = new mongoose.Schema({
+  inspectionId: { type: String, required: true, unique: true },
   modelName: { type: String, required: true },
   maxPrice: { type: Number, required: true },
   finalPrice: { type: Number, required: true },
+  deviceType: { type: String, required: true },
   watchCaseType: { type: String }, // For watches
   watchCaseFinish: { type: String }, // For watches
   watchCaseSize: { type: String }, // For watches
@@ -87,6 +89,7 @@ const InspectionSchema = new mongoose.Schema({
   whatsapp: { type: String, required: true },
   isInLahore: { type: Boolean, required: true },
   buyingPreference: { type: String, required: true },
+  acceptedTerms: { type: Boolean, required: true },
   // IP and Location details
   ipAddress: { type: String },
   location: { type: LocationSchema },

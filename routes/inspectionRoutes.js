@@ -3,6 +3,9 @@ const axios = require('axios');
 const router = express.Router();
 const Inspection = require('../models/Inspection');
 
+// starting value for the submission ID counter
+let currentInspectionNumber = 7097;
+
 // Route to create a new inspection
 router.post('/', async (req, res) => {
   try {
@@ -10,6 +13,7 @@ router.post('/', async (req, res) => {
       modelName,
       maxPrice,
       finalPrice,
+      deviceType,
       watchCaseType,
       watchCaseFinish,
       watchCaseSize,
@@ -44,11 +48,27 @@ router.post('/', async (req, res) => {
       isInLahore,
       buyingPreference,
       address,
+      acceptedTerms,
       // IP and Location
       location,
     } = req.body;
 
     const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+    // Generate a unique inspection ID based on the device type
+    const prefixMap = {
+      iPhone: 'IP',
+      iPad: 'ID',
+      Samsung: 'SM',
+      MacBook: 'MB',
+      Watch: 'AW',
+    }
+
+    const prefix = prefixMap[deviceType] || 'OT';
+    const inspectionId = `#RN-PK-${prefix}(${currentInspectionNumber})`;
+
+    // Increment the inspection number
+    currentInspectionNumber += 1;
 
     // Construct processorType if present
     const newProcessorType = processorType ? {
@@ -60,9 +80,11 @@ router.post('/', async (req, res) => {
 
     // Create new inspection object
     const newInspection = new Inspection({
+      inspectionId,
       modelName,
       maxPrice,
       finalPrice,
+      deviceType,
       watchCaseType,
       watchCaseFinish,
       watchCaseSize,
@@ -104,6 +126,7 @@ router.post('/', async (req, res) => {
       isInLahore,
       buyingPreference,
       address,
+      acceptedTerms,
       ipAddress,
       location,
     });
