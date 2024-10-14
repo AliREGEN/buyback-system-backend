@@ -65,7 +65,7 @@ router.post('/', async (req, res) => {
     }
 
     const prefix = prefixMap[deviceType] || 'OT';
-    const inspectionId = `#RN-PK-${prefix}(${currentInspectionNumber})`;
+    const inspectionId = `#RN-PK-${prefix}${currentInspectionNumber}`;
 
     // Increment the inspection number
     currentInspectionNumber += 1;
