@@ -5,7 +5,7 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
 const cloudinary = require('../config/cloudinary');
-const BatteryHealth = require('../models/batteryHealthOption');
+const ActivatedSince = require('../models/activatedSinceOption');
 const CosmeticIssues = require('../models/cosmeticIssueOption');
 const Connectivity = require('../models/connectivityOption');
 const Faults = require('../models/faultOption');
@@ -50,7 +50,7 @@ const safeParse = (value) => {
 };
 
 const fetchOptions = async () => {
-  const batteryHealthOptions = await BatteryHealth.find();
+  const activatedSinceOptions = await ActivatedSince.find();
   const cosmeticIssuesOptions = await CosmeticIssues.find();
   const connectivityOptions = await Connectivity.find();
   const applePencilOptions = await ApplePencil.find();
@@ -61,7 +61,7 @@ const fetchOptions = async () => {
   const accessoriesOptions = await Accessories.find();
 
   return {
-    batteryHealthOptions,
+    activatedSinceOptions,
     cosmeticIssuesOptions,
     connectivityOptions,
     faultsOptions,
@@ -97,11 +97,11 @@ router.post('/', upload.any(), async (req, res) => {
 
     const {
       vendor, deviceType, modelName, maxPrice, colors, storageSizes, paymentOptions,
-      batteryHealth, connectivity, cosmeticIssues, faults, repairs, frontScreen, body, applePencil ,accessories,
+      activatedSince, connectivity, cosmeticIssues, faults, repairs, frontScreen, body, applePencil ,accessories,
     } = req.body;
 
     // Parsing the passed data, only if values exist
-    const parsedBatteryHealth = batteryHealth ? safeParse(batteryHealth) : [];
+    const parsedActivatedSince = activatedSince ? safeParse(activatedSince) : [];
     const parsedCosmeticIssues = cosmeticIssues ? safeParse(cosmeticIssues) : [];
     const parsedConnectivity = connectivity ? safeParse(connectivity) : [];
     const parsedFaults = faults ? safeParse(faults) : [];
@@ -112,7 +112,7 @@ router.post('/', upload.any(), async (req, res) => {
     const parsedApplePencil = applePencil ? safeParse(applePencil) : [];
 
     // Log parsed data for debugging
-    console.log('Parsed Battery Health:', parsedBatteryHealth);
+    console.log('Parsed Activated Since:', parsedActivatedSince);
     console.log('Parsed Cosmetic Issues:', parsedCosmeticIssues);
     console.log('Parsed Connectivity:', parsedConnectivity);
     console.log('Parsed Faults:', parsedFaults);
@@ -123,7 +123,7 @@ router.post('/', upload.any(), async (req, res) => {
     console.log('Parsed Accessories:', parsedAccessories);
 
     // Mapping the parsed data to correct ObjectIds, only if the field exists
-    const correctBatteryHealthIds = parsedBatteryHealth.length ? mapDynamicOptions(parsedBatteryHealth, options.batteryHealthOptions) : [];
+    const correctActivatedSinceIds = parsedActivatedSince.length ? mapDynamicOptions(parsedActivatedSince, options.activatedSinceOptions) : [];
     const correctCosmeticIssueIds = parsedCosmeticIssues.length ? mapDynamicOptions(parsedCosmeticIssues, options.cosmeticIssuesOptions) : [];
     const correctConnectivityIds = parsedConnectivity.length ? mapDynamicOptions(parsedConnectivity, options.connectivityOptions) : [];
     const correctFaultIds = parsedFaults.length ? mapDynamicOptions(parsedFaults, options.faultsOptions) : [];
@@ -136,7 +136,7 @@ router.post('/', upload.any(), async (req, res) => {
     // Log mapped IDs for debugging
     console.log("Correct Fault Ids: ", correctFaultIds);
     console.log("Correct Cosmetic Issue Ids: ", correctCosmeticIssueIds);
-    console.log("Correct Battery Health Ids: ", correctBatteryHealthIds);
+    console.log("Correct Activated Since Ids: ", correctActivatedSinceIds);
     console.log("Correct Connectivity Ids: ", correctConnectivityIds);
     console.log("Correct Repair Ids: ", correctRepairIds);
     console.log("Correct Front Screen Ids: ", correctFrontScreenIds);
@@ -177,7 +177,7 @@ router.post('/', upload.any(), async (req, res) => {
         deductionPercentage: 0,
       })),
       paymentOptions: Array.isArray(paymentOptions) ? paymentOptions : JSON.parse(paymentOptions || '[]'),
-      batteryHealth: correctBatteryHealthIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
+      activatedSince: correctActivatedSinceIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
       cosmeticIssues: correctCosmeticIssueIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
       faults: correctFaultIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
       repairs: correctRepairIds.map(optionId => ({ option: optionId, deductionPercentage: 0 })),
@@ -206,7 +206,7 @@ router.put('/:id', upload.any(), async (req, res) => {
 
     const {
       vendor, deviceType, modelName, maxPrice, colors, storageSizes, paymentOptions,
-      batteryHealth, cosmeticIssues, connectivity , faults, repairs, frontScreen, body, accessories, applePencil,
+      activatedSince, cosmeticIssues, connectivity , faults, repairs, frontScreen, body, accessories, applePencil,
     } = req.body;
 
     // Find the existing iPad document
@@ -216,7 +216,7 @@ router.put('/:id', upload.any(), async (req, res) => {
     }
 
     // Parsing the passed data, only if values exist
-    const parsedBatteryHealth = batteryHealth ? safeParse(batteryHealth) : existingiPad.batteryHealth.map(opt => opt.option);
+    const parsedActivatedSince = activatedSince ? safeParse(activatedSince) : existingiPad.activatedSince.map(opt => opt.option);
     const parsedCosmeticIssues = cosmeticIssues ? safeParse(cosmeticIssues) : existingiPad.cosmeticIssues.map(opt => opt.option);
     const parsedConnectivity = connectivity ? safeParse(connectivity) : existingiPad.connectivity.map(opt => opt.option);
     const parsedFaults = faults ? safeParse(faults) : existingiPad.faults.map(opt => opt.option);
@@ -227,7 +227,7 @@ router.put('/:id', upload.any(), async (req, res) => {
     const parsedApplePencil = applePencil ? safeParse(applePencil) : existingiPad.applePencil.map(opt => opt.option);
 
     // Mapping the parsed data to correct ObjectIds, only if the field exists
-    const correctBatteryHealthIds = parsedBatteryHealth.length ? mapDynamicOptions(parsedBatteryHealth, options.batteryHealthOptions) : existingiPad.batteryHealth.map(opt => opt.option);
+    const correctActivatedSinceIds = parsedActivatedSince.length ? mapDynamicOptions(parsedActivatedSince, options.activatedSinceOptions) : existingiPad.activatedSince.map(opt => opt.option);
     const correctCosmeticIssueIds = parsedCosmeticIssues.length ? mapDynamicOptions(parsedCosmeticIssues, options.cosmeticIssuesOptions) : existingiPad.cosmeticIssues.map(opt => opt.option);
     const correctConnectivityIds = parsedConnectivity.length ? mapDynamicOptions(parsedConnectivity, options.connectivityOptions) : existingiPad.connectivity.map(opt => opt.option);
     const correctFaultIds = parsedFaults.length ? mapDynamicOptions(parsedFaults, options.faultsOptions) : existingiPad.faults.map(opt => opt.option);
@@ -241,7 +241,7 @@ router.put('/:id', upload.any(), async (req, res) => {
     console.log("Correct Fault Ids: ", correctFaultIds);
     console.log("Correct Cosmetic Issue Ids: ", correctCosmeticIssueIds);
     console.log("Correct Connectivity Ids: ", correctConnectivityIds);
-    console.log("Correct Battery Health Ids: ", correctBatteryHealthIds);
+    console.log("Correct Activated Since Ids: ", correctActivatedSinceIds);
     console.log("Correct Repair Ids: ", correctRepairIds);
     console.log("Correct Front Screen Ids: ", correctFrontScreenIds);
     console.log("Correct Body Ids: ", correctBodyIds);
@@ -303,7 +303,7 @@ router.put('/:id', upload.any(), async (req, res) => {
       });
     };
 
-    existingiPad.batteryHealth = updateDeductionField(existingiPad.batteryHealth, correctBatteryHealthIds);
+    existingiPad.activatedSince = updateDeductionField(existingiPad.activatedSince, correctActivatedSinceIds);
     existingiPad.cosmeticIssues = updateDeductionField(existingiPad.cosmeticIssues, correctCosmeticIssueIds);
     existingiPad.connectivity = updateDeductionField(existingiPad.connectivity, correctConnectivityIds);
     existingiPad.faults = updateDeductionField(existingiPad.faults, correctFaultIds);
@@ -338,7 +338,7 @@ router.put('/:id/device-details', async (req, res) => {
     // Log the existing fetchedIPad document for debugging
     console.log('Existing IPad Document:', fetchedIPad);
 
-    // Iterate over each category (like batteryHealth, cosmeticIssues, etc.) in updateFields
+    // Iterate over each category (like ActivatedSince, cosmeticIssues, etc.) in updateFields
     for (const category in updateFields) {
       if (Array.isArray(updateFields[category])) {
         updateFields[category].forEach(updatedOption => {
@@ -377,7 +377,7 @@ router.get('/', async (req, res) => {
       // Fetch IPad data and populate the option fields with actual data by _id
       const fetchedIPad = await iPad
         .findById(id)
-        .populate('batteryHealth.option', 'option')
+        .populate('activatedSince.option', 'option')
         .populate('cosmeticIssues.option', 'header condition')
         .populate('faults.option', 'header condition')
         .populate('repairs.option', 'option')
@@ -413,7 +413,7 @@ router.get('/:modelName', async (req, res) => {
     // Fetch IPad data and populate the option fields with actual data
     const fetchedIPad = await iPad
       .findOne({ modelName })
-      .populate('batteryHealth.option', 'option')  // Assuming option is the field in BatteryHealth
+      .populate('activatedSince.option', 'option')  // Assuming option is the field in ActivatedSince
       .populate('cosmeticIssues.option', 'header condition')  // Assuming header and condition are fields in CosmeticIssues
       .populate('connectivity.option', 'option')  // Assuming option is the field in Connectivity
       .populate('faults.option', 'header condition')  // Assuming header and condition are fields in Faults

@@ -42,7 +42,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     await ActivatedSince.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Battery Health Option deleted' });
+    res.json({ message: 'Activated Since Option deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
