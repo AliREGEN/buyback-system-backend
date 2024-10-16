@@ -62,6 +62,7 @@ router.post('/', async (req, res) => {
       Samsung: 'SM',
       MacBook: 'MB',
       Watch: 'AW',
+      Accessories: 'AC',
     }
 
     const prefix = prefixMap[deviceType] || 'OT';
