@@ -49,6 +49,7 @@ router.post('/', async (req, res) => {
       buyingPreference,
       address,
       acceptedTerms,
+      acceptedInspection,
       // IP and Location
       location,
     } = req.body;
@@ -128,6 +129,7 @@ router.post('/', async (req, res) => {
       buyingPreference,
       address,
       acceptedTerms,
+      acceptedInspection,
       ipAddress,
       location,
     });

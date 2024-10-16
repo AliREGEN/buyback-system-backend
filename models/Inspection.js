@@ -90,7 +90,7 @@ const InspectionSchema = new mongoose.Schema({
   isInLahore: { type: Boolean, required: true },
   buyingPreference: { type: String, required: true },
   acceptedTerms: { type: Boolean, required: true },
-  acceptedInspection: { type: Boolean, required: true },
+  acceptedInspection: { type: Boolean },
   // IP and Location details
   ipAddress: { type: String },
   location: { type: LocationSchema },
