@@ -46,6 +46,7 @@ app.use('/api/connectivity', require('./routes/connectivityRoutes'));
 app.use('/api/apple-pencil', require('./routes/applePencilRoutes'));
 app.use('/api/strap', require('./routes/strapRoutes'));
 app.use('/api/band', require('./routes/bandRoutes'));
+app.use('/api/device-count', require('./routes/deviceCountRoutes'));
 
 
 const PORT = process.env.PORT || 5000;
