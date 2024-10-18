@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const DeviceCount = require('../models/deviceCount');
+const DeviceCount = require('../models/DeviceCount');
 
 router.get('/', async (req, res) => {
   try {
