@@ -139,9 +139,12 @@ router.post('/', async (req, res) => {
 
     // Send POST request to Zapier webhook (optional)
     const zapierWebhookUrl = 'https://hooks.zapier.com/hooks/catch/12005261/2hi9mrt/';
+    const zapierWebhookUrl2 = 'https://hooks.zapier.com/hooks/catch/12005261/21l3lwj/';
     const zapierPayload = { ...newInspection._doc }; // Simplified payload
+    const zapierPayload2 = { ...newInspection._doc }; // Simplified payload
 
     await axios.post(zapierWebhookUrl, zapierPayload);
+    await axios.post(zapierWebhookUrl2, zapierPayload2);
 
     res.status(201).json(newInspection);
   } catch (error) {
