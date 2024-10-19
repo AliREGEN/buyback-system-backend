@@ -19,21 +19,29 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 const uploadToCloudinary = (file, fileName) => {
-    return new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-            {
-                public_id: fileName,
-                folder: 'ipad_images',
-            },
-            (error, result) => {
-                if (error) {
-                    return reject(error)
-                }
-                resolve(result.secure_url);
-            }
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        public_id: fileName,
+        folder: 'ipad_images',
+        format: 'webp', // Specify the format to be webp
+      },
+      (error, result) => {
+        if (error) {
+          return reject(error);
+        }
+
+        // Apply transformations to the returned URL
+        const transformedUrl = result.secure_url.replace(
+          '/upload/',
+          '/upload/c_fill,h_300,w_300/dpr_2.0/f_webp/q_auto:best/'
         );
-        stream.end(file.buffer);
-    });
+        
+        resolve(transformedUrl);
+      }
+    );
+    stream.end(file.buffer);
+  });
 };
 
 // Helper function to safely parse JSON fields
