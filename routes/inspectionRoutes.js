@@ -138,8 +138,8 @@ router.post('/', async (req, res) => {
     await newInspection.save();
 
     // Send POST request to Zapier webhook (optional)
-    const zapierWebhookUrl = 'https://hooks.zapier.com/hooks/catch/12005261/2hi9mrt/';
-    const zapierWebhookUrl2 = 'https://hooks.zapier.com/hooks/catch/12005261/21l3lwj/';
+    const zapierWebhookUrl = process.env.ZAPIER_WEBHOOK_URL;
+    const zapierWebhookUrl2 = process.env.ZAPIER_WEBHOOK_URL2;
     const zapierPayload = { ...newInspection._doc }; // Simplified payload
     const zapierPayload2 = { ...newInspection._doc }; // Simplified payload
 
