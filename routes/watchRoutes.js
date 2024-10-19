@@ -241,7 +241,7 @@ router.put('/:id', upload.any(), async (req, res) => {
       const finishArray = watchCaseFinish.split(',');
       const updatedFinish = await Promise.all(finishArray.map(async (finish) => {
         const existingFinish = existingWatch.watchCaseFinish.find(c => c.finish === finish);
-        const uploadedImage = req.files.find(file => file.feildname === `images_${finish}`);
+        const uploadedImage = req.files.find(file => file.fieldname === `images_${finish}`);
         let imageUrl = existingFinish?.image || '';
         if (uploadedImage) {
           const fileName = `${modelName.replace(/\s/g, '_')}_${finish}_${uuidv4()}`;
