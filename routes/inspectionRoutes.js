@@ -4,7 +4,7 @@ const router = express.Router();
 const Inspection = require('../models/Inspection');
 
 // starting value for the submission ID counter
-let currentInspectionNumber = 7112;
+let currentInspectionNumber = 7143;
 
 // Route to create a new inspection
 router.post('/', async (req, res) => {
@@ -90,7 +90,10 @@ router.post('/', async (req, res) => {
       watchCaseType,
       watchCaseFinish,
       watchCaseSize,
-      strap,
+      strap: strap.map(strapItem => ({
+        header: strapItem.header,
+        value: strapItem.description,
+      })),
       band,
       storageSize,
       colorOption,
@@ -115,10 +118,22 @@ router.post('/', async (req, res) => {
         header: issue.header,
         value: issue.description,
       })),
-      frontScreen,
-      back,
-      side,
-      body,
+      frontScreen: frontScreen.map(screen => ({
+        header: screen.header,
+        value: screen.description,
+      })),
+      back: back.map(backItem => ({
+        header: backItem.header,
+        value: backItem.description,
+      })),
+      side: side.map(sideItem => ({
+        header: sideItem.header,
+        value: sideItem.description
+      })),
+      body: body.map(bodyItem => ({
+        header: bodyItem.header,
+        value: bodyItem.description,
+      })),
       pta,
       accessories,
       applePencil,
