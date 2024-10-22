@@ -29,31 +29,6 @@ const FaultOptionSchema = new mongoose.Schema({
   value: { type: String, required: true },
 });
 
-const FrontScreenSchema = new mongoose.Schema({
-  header: { type: String, required: true },
-  value: { type: String, required: true },
-});
-
-const BackSchema = new mongoose.Schema({
-  header: { type: String, required: true },
-  value: { type: String, required: true },
-});
-
-const SideSchema = new mongoose.Schema({
-  header: { type: String, required: true },
-  value: { type: String, required: true },
-});
-
-const BodySchema = new mongoose.Schema({
-  header: { type: String, required: true },
-  value: { type: String, required: true },
-});
-
-const StrapSchema = new mongoose.Schema({
-  header: { type: String, required: true },
-  value: { type: String, required: true },
-});
-
 const LocationSchema = new mongoose.Schema({
   city: { type: String },
   region: { type: String },
@@ -85,7 +60,7 @@ const InspectionSchema = new mongoose.Schema({
   watchCaseFinish: { type: String }, // For watches
   watchCaseSize: { type: String }, // For watches
   band: { type: String }, // For watches
-  strap: { type: [StrapSchema] }, // New field for strap condition
+  strap: { type: String }, // New field for strap condition
   storageSize: { type: String },
   colorOption: { type: String },
   memorySize: { type: String },
@@ -100,10 +75,10 @@ const InspectionSchema = new mongoose.Schema({
   repair: { type: [RepairOptionSchema] },
   isDamaged: { type: String },
   cosmeticIssues: { type: [CosmeticIssueSchema] },
-  frontScreen: { type: [FrontScreenSchema] },
-  back: { type: [BackSchema] },
-  side: { type: [SideSchema] },
-  body: { type: [BodySchema] },
+  frontScreen: { type: String },
+  back: { type: String },
+  side: { type: String },
+  body: { type: String },
   pta: { type: [PtaOptionSchema], default: undefined },
   unknownPart: { type: [UnknownPartSchema], default: undefined },
   accessories: { type: String },

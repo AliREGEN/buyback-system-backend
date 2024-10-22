@@ -90,10 +90,7 @@ router.post('/', async (req, res) => {
       watchCaseType,
       watchCaseFinish,
       watchCaseSize,
-      strap: strap.map(strapItem => ({
-        header: strapItem.header,
-        value: strapItem.description,
-      })),
+      strap,
       band,
       storageSize,
       colorOption,
@@ -118,22 +115,10 @@ router.post('/', async (req, res) => {
         header: issue.header,
         value: issue.description,
       })),
-      frontScreen: frontScreen.map(screen => ({
-        header: screen.header,
-        value: screen.description,
-      })),
-      back: back.map(backItem => ({
-        header: backItem.header,
-        value: backItem.description,
-      })),
-      side: side.map(sideItem => ({
-        header: sideItem.header,
-        value: sideItem.description
-      })),
-      body: body.map(bodyItem => ({
-        header: bodyItem.header,
-        value: bodyItem.description,
-      })),
+      frontScreen,
+      back,
+      side,
+      body,
       pta,
       accessories,
       applePencil,
