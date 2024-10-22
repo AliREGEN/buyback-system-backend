@@ -19,6 +19,11 @@ const CosmeticIssueSchema = new mongoose.Schema({
   value: { type: String, required: true },
 });
 
+const CosmeticConditionSchema = new mongoose.Schema({
+  header: { type: String, required: true },
+  value: { type: String, required: true },
+});
+
 const PaymentOptionSchema = new mongoose.Schema({
   option: { type: String, required: true },
   deductionPercentage: { type: Number, required: true },
@@ -60,7 +65,7 @@ const InspectionSchema = new mongoose.Schema({
   watchCaseFinish: { type: String }, // For watches
   watchCaseSize: { type: String }, // For watches
   band: { type: String }, // For watches
-  strap: { type: String }, // New field for strap condition
+  strap: { type: CosmeticConditionSchema }, // New field for strap condition
   storageSize: { type: String },
   colorOption: { type: String },
   memorySize: { type: String },
@@ -75,10 +80,10 @@ const InspectionSchema = new mongoose.Schema({
   repair: { type: [RepairOptionSchema] },
   isDamaged: { type: String },
   cosmeticIssues: { type: [CosmeticIssueSchema] },
-  frontScreen: { type: String },
-  back: { type: String },
-  side: { type: String },
-  body: { type: String },
+  frontScreen: { type: CosmeticConditionSchema },
+  back: { type: CosmeticConditionSchema },
+  side: { type: CosmeticConditionSchema },
+  body: { type: CosmeticConditionSchema },
   pta: { type: [PtaOptionSchema], default: undefined },
   unknownPart: { type: [UnknownPartSchema], default: undefined },
   accessories: { type: String },
