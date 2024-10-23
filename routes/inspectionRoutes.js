@@ -4,7 +4,7 @@ const router = express.Router();
 const Inspection = require('../models/Inspection');
 
 // starting value for the submission ID counter
-let currentInspectionNumber = 7146;
+let currentInspectionNumber = 7167;
 
 // Route to create a new inspection
 router.post('/', async (req, res) => {
