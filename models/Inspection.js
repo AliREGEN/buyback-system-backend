@@ -60,6 +60,14 @@ const InspectionSchema = new mongoose.Schema({
   modelName: { type: String, required: true },
   maxPrice: { type: Number, required: true },
   finalPrice: { type: Number, required: true },
+  deductionDetails: [
+    {
+      option: { type: String },
+      deductionAmount: { type: Number },
+      deductionPercentage: { type: Number },
+    },
+  ],
+  adjustedPrice: { type: Number },
   deviceType: { type: String, required: true },
   watchCaseType: { type: String }, // For watches
   watchCaseFinish: { type: String }, // For watches
