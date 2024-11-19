@@ -15,7 +15,13 @@ const app = express();
 app.use(compression());
 
 // Init Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: ['https://mohdaleerehman.myshopify.com', 'https://test.getregen.co'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Routes
