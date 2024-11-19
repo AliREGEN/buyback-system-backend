@@ -48,6 +48,9 @@ app.use('/api/strap', require('./routes/strapRoutes'));
 app.use('/api/band', require('./routes/bandRoutes'));
 app.use('/api/device-count', require('./routes/deviceCountRoutes'));
 
+// Trade in routes
+app.use('/api', require('./routes/trade-in-submit'));
+
 
 const PORT = process.env.PORT || 5000;
 

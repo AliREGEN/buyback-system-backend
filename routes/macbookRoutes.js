@@ -1,9 +1,9 @@
-const mongoose = require('mongoose');
 const MacBook = require('../models/Macbook');
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
+
 const cloudinary = require('../config/cloudinary');
 const ProcessorTypes = require('../models/processorOption');
 const BatteryHealth = require('../models/batteryHealthOption');
@@ -12,7 +12,6 @@ const Faults = require('../models/faultOption');
 const Repairs = require('../models/repairOption');
 const FrontScreen = require('../models/frontScreenOption');
 const Body = require('../models/bodyOption');
-const SIMVariant = require('../models/simVariantOption');
 const Accessories = require('../models/accessoriesOption');
 
 // Set up multer for file uploads

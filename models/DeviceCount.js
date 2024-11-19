@@ -4,7 +4,7 @@ const DeviceCountSchema = new mongoose.Schema({
     count: {
         type: Number,
         required: true,
-        default: 4542,
+        default: 4715,
     },
     updatedAt: {
         type: Date,

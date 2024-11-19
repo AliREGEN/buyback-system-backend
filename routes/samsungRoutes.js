@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const Samsung = require('../models/Samsung');
 const express = require('express');
 const router = express.Router();
