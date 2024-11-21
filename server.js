@@ -16,7 +16,7 @@ app.use(compression());
 
 // Init Middleware
 app.use(cors({
-  origin: ['https://test.getregen.co', 'https://mohdaleerehman.myshopify.com'],
+  origin: ['https://test.getregen.co', 'https://shopify.getregen.co'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
 }));
