@@ -14,14 +14,26 @@ const app = express();
 // Enable GZIP compression
 app.use(compression());
 
-app.use(
-  cors({
-    origin: '*', // Allow all origins
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    credentials: false, // Credentials are not allowed with '*'
-  })
-);
+const allowedOrigins = ['https://test.getregen.co', 'https://shopify.getregen.co'];
 
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
+
+  next();
+});
 
 // Middleware to parse JSON
 app.use(express.json());
