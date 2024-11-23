@@ -14,27 +14,16 @@ const app = express();
 // Enable GZIP compression
 app.use(compression());
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || ['https://test.getregen.co', 'https://shopify.getregen.co'].includes(origin))
-    {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: '*', // Allow all origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: false, // Credentials are not allowed with '*'
+  })
+);
 
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  next();
-});
 
+// Middleware to parse JSON
 app.use(express.json());
 
 // Routes
@@ -67,10 +56,10 @@ app.use('/api/strap', require('./routes/strapRoutes'));
 app.use('/api/band', require('./routes/bandRoutes'));
 app.use('/api/device-count', require('./routes/deviceCountRoutes'));
 
-// Trade in routes
+// Trade-in routes
 app.use('/api', require('./routes/trade-in-submit'));
 
-
+// Start the server
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, '0.0.0.0', () => console.log(`Server started on port ${PORT}`));
