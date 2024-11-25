@@ -502,6 +502,67 @@ router.get('/:modelName', async (req, res) => {
   }
 });
 
+router.get('/filter', async (req, res) => {
+  const { currentProduct} = req.query;
+
+  if (!currentProduct) {
+    return res.status(400).json({ message: 'Current product is required' });
+  }
+
+  try {
+    const models = await iPhone.find().sort({ _id: 1 }); // Fetch all iPhones
+
+    // Define the hierarchy of models
+    const modelHierarchy = [
+      'iPhone X',
+      'iPhone XR',
+      'iPhone XS',
+      'iPhone XS Max',
+      'iPhone 11',
+      'iPhone 11 Pro',
+      'iPhone 11 Pro Max',
+      'iPhone SE (2nd Generation)',
+      'iPhone 12 Mini',
+      'iPhone 12',
+      'iPhone 12 Pro',
+      'iPhone 12 Pro Max',
+      'iPhone 13 Mini',
+      'iPhone 13',
+      'iPhone 13 Pro',
+      'iPhone 13 Pro Max',
+      'iPhone SE (3rd Generation)',
+      'iPhone 14',
+      'iPhone 14 Plus',
+      'iPhone 14 Pro',
+      'iPhone 14 Pro Max',
+      'iPhone 15',
+      'iPhone 15 Plus',
+      'iPhone 15 Pro',
+      'iPhone 15 Pro Max',
+    ];
+
+    // Find the index of the current model
+    const currentIndex = modelHierarchy.findIndex((model) => model === currentProduct);
+
+    if (currentIndex === -1) {
+      return res.status(400).json({ message: 'Invalid current product' });
+    }
+
+    // Filter models to exclude the current model and higher models
+    const filteredHierarchy = modelHierarchy.slice(currentIndex + 1);
+
+    // Filter models based on the filtered hierarchy
+    const filteredModels = models.filter((model) =>
+      filteredHierarchy.includes(model.modelName)
+    );
+
+    res.json(filteredModels);
+  } catch (error) {
+    console.error('Error filtering models:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
 // Route to delete an iPhone by ID
 router.delete('/:id', async (req, res) => {
   try {
