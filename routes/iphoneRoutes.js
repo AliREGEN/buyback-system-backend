@@ -447,6 +447,17 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/filter', async (req, res) => {
+  try {
+    const { currentModel } = req.query;
+    const allModels = await iPhone.find();
+    const filteredModels = allModels.filter((model) => model.modelName > currentModel);
+    res.status(200).json(filteredModels);
+  } catch (error) {
+    res.status(500).json({ message: 'Error filtering models', error });
+  }
+});
+
 // Route to get iPhone by model name
 router.get('/:modelName', async (req, res) => {
   try {
