@@ -14,7 +14,27 @@ const app = express();
 // Enable GZIP compression
 app.use(compression());
 
-app.use(cors());
+const allowedOrigins = [
+    'https://shopify.getregen.co',
+    'https://test.getregen.co',
+];
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+};
+
+// Enable CORS
+app.use(cors(corsOptions));
 
 // Middleware to parse JSON
 app.use(express.json());
