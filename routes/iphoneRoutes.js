@@ -448,15 +448,28 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/filter', async (req, res) => {
+  const { currentProduct } = req.query;
+
+  if (!currentProduct) {
+    return res.status(400).json({ message: 'Current product is required' });
+  }
+
   try {
-    const { currentModel } = req.query;
-    const allModels = await iPhone.find();
-    const filteredModels = allModels.filter((model) => model.modelName > currentModel);
-    res.status(200).json(filteredModels);
+    const models = await iPhone.find(); // Fetch all iPhones
+
+    // Find the index of the current model
+    const currentIndex = models.findIndex((model) => model.modelName === currentProduct);
+
+    // Return all models after the current model
+    const filteredModels = currentIndex !== -1 ? models.slice(currentIndex + 1) : models;
+
+    res.json(filteredModels);
   } catch (error) {
-    res.status(500).json({ message: 'Error filtering models', error });
+    console.error('Error filtering models:', error);
+    res.status(500).json({ message: 'Server Error' });
   }
 });
+
 
 // Route to get iPhone by model name
 router.get('/:modelName', async (req, res) => {
