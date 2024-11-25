@@ -14,8 +14,6 @@ const app = express();
 // Enable GZIP compression
 app.use(compression());
 
-app.use(cors());
-
 // Middleware to parse JSON
 app.use(express.json());
 
